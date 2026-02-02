@@ -1,4 +1,5 @@
 ﻿using Application.Paging;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace Application.Interfaces.Generic;
 
 public interface IGenericRepository<TEntity> where TEntity : class
 {
+
+	Task<ICollection<TEntity>> GetState();
 
 	Task<TEntity?> GetFirstAsync(
 	Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,

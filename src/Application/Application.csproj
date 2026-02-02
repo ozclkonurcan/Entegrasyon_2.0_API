@@ -10,6 +10,9 @@
     <Folder Include="Features\Auth\Commands\RevokeToken\" />
     <Folder Include="Features\Auth\Queries\" />
     <Folder Include="Features\DatabaseManagement\Constants\" />
+    <Folder Include="Features\EPMDocuments\Constants\" />
+    <Folder Include="Features\EPMDocuments\Queries\GetById\" />
+    <Folder Include="Features\EPMDocuments\Rules\" />
     <Folder Include="Features\IntegrationSettings\RoleMappings\Constants\" />
     <Folder Include="Features\IntegrationSettings\RoleMappings\Rules\" />
     <Folder Include="Features\IntegrationSettings\ModuleSettings\Constants\" />

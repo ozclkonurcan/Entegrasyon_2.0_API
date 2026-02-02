@@ -65,6 +65,15 @@ public class BaseDbContexts : DbContext, INotificationDbContext
 	public DbSet<EPMDocument> EPMDocument { get; set; }
 	public DbSet<EPMDocument_RELEASED> EPMDocument_RELEASED { get; set; }
 	public DbSet<EPMDocument_CANCELLED> EPMDocument_CANCELLED { get; set; }
+
+	// YENİ EKLENENLER:
+	public DbSet<EPMDocument_ERROR> EPMDocumentErrors { get; set; }
+	public DbSet<EPMDocument_SENT> EPMDocumentSents { get; set; }
+
+
+	public DbSet<EPMDocument_CANCELLED_SENT> EPMDocument_CANCELLED_SENT { get; set; }
+	public DbSet<EPMDocument_CANCELLED_ERROR> EPMDocument_CANCELLED_ERROR { get; set; }
+
 	public DbSet<EPMDocumentMaster> EPMDocumentMasters { get; set; }
 	public DbSet<EPMReferenceLink> EPMReferenceLinks { get; set; }
 

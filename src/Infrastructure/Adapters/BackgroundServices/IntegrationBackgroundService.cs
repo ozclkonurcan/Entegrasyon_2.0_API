@@ -1,5 +1,7 @@
 ﻿using Application.Features.DatabaseManagement.Queries.TableControls;
+using Application.Features.WindchillIntegration.EPMDocumentCancelled.Commands.ErrorProcess;
 using Application.Features.WindchillIntegration.EPMDocumentCancelled.Commands.Process;
+using Application.Features.WindchillIntegration.EPMDocumentReleased.Commands.ErrorProcess;
 using Application.Features.WindchillIntegration.EPMDocumentReleased.Commands.Process;
 using Application.Features.WindchillIntegration.WTPartAlternateLink.Commands.ErrorProcess;
 using Application.Features.WindchillIntegration.WTPartAlternateLink.Commands.Process;
@@ -113,8 +115,18 @@ namespace Infrastructure.BackgroundServices
 				async (mediator) => await mediator.Send(new ErrorProcessWTPartAlternateLinkRemovedCommand(), stoppingToken),
 				"ErrorProcessWTPartAlternateLinkRemoved", stoppingToken);
 
+			//EMPDocument
+			var errorEpmReleasedTask = ExecuteTaskWithDeadlockProtection(
+		async (mediator) => await mediator.Send(new ErrorProcessEPMDocumentReleasedCommand(), stoppingToken),
+		"ErrorProcessEPMDocumentReleased", stoppingToken);
+
+			var errorEpmCancelledTask = ExecuteTaskWithDeadlockProtection(
+		async (mediator) => await mediator.Send(new ErrorProcessEPMDocumentCancelledCommand(), stoppingToken),
+		"ErrorProcessEPMDocumentReleased", stoppingToken);
+
+
 			// Hala paralel çalışıyor ama güvenli
-			await Task.WhenAll(errorReleasedTask, errorCancelledTask, errorAlternateTask, errorAlternateRemovedTask);
+			await Task.WhenAll(errorReleasedTask, errorCancelledTask, errorAlternateTask, errorAlternateRemovedTask, errorEpmReleasedTask, errorEpmCancelledTask);
 		}
 
 		private async Task ProcessNormalTasksParallel(CancellationToken stoppingToken)
@@ -147,7 +159,7 @@ namespace Infrastructure.BackgroundServices
 				"ProcessEPMDocumentCancelled", stoppingToken);
 
 
-			await Task.WhenAll(releasedTask, cancelledTask, alternateTask, alternateRemovedTask, epmDocumentReleasedTask, epmDocumentCancelledTask);
+			await Task.WhenAll(releasedTask, cancelledTask, alternateTask, alternateRemovedTask, epmDocumentReleasedTask ,epmDocumentCancelledTask);
 		}
 
 		private async Task ExecuteTaskWithDeadlockProtection(Func<IMediator, Task> taskFunc, string taskName, CancellationToken stoppingToken)

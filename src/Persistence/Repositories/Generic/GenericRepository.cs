@@ -48,6 +48,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 	//	return await query.FirstOrDefaultAsync(cancellationToken);
 	//}
 
+	public async Task<ICollection<TEntity>> GetState()
+	{
+		// İstersen performans için AsNoTracking() de ekleyebilirsin:
+		// return await _context.Set<TEntity>().AsNoTracking().ToListAsync();
+		return await _context.Set<TEntity>().ToListAsync();
+	}
+
 	public async Task<TEntity?> GetFirstAsync(
 		Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
 		Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null,

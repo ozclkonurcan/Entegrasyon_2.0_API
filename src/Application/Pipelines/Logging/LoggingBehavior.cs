@@ -32,6 +32,8 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 		new LogParameter{Type = request.GetType().Name, Value = request},
 	};
 
+
+
 		LogDetail logDetail = new()
 		{
 			FullName = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown",
