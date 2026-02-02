@@ -1,0 +1,468 @@
+﻿@{
+    Layout = null;
+    // @Html.Partial("_Alerts")
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entegrasyon Login</title>
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+</head>
+<style>
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8); /* Yarı saydam arka plan */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Diğer öğelerin üzerinde olmasını sağlar */
+    }
+
+    .loading-spinner {
+        text-align: center;
+    }
+</style>
+<body class="justify-content-center align-items-center">
+
+    <!-- Yükleme ekranı -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <span class="spinner-border text-primary" role="status"></span>
+            <span class="text-gray-800 fs-6 fw-semibold mt-5">Yükleniyor...</span>
+        </div>
+    </div>
+
+
+    <div id="loadingSpinner" style="display: none;">
+        <i class="fa fa-spinner fa-spin"></i> Kurulum yapılıyor...
+    </div>
+    <!-- Yükleme ekranı -->
+
+    <div class="container">
+        <div class="d-flex flex-column flex-column-fluid bgi-position-y-bottom position-x-center bgi-size-cover bgi-attachment-fixed">
+            <div class="d-flex flex-column-auto flex-column align-items-center p-10">
+                <div class="w-lg-500px bg-white rounded shadow-sm p-10">
+                    <form asp-controller="Auth" asp-action="Login" method="post">
+                        <div class="text-center mb-10">
+                            <h1 class="fw-bolder fs-2x text-dark mb-2">Entegrasyon Giriş</h1>
+                            <div class="fw-lighter fs-6 text-muted">Lütfen hesap bilgilerinizi girin</div>
+                        </div>
+
+                        <div class="fv-row mb-8">
+                            <label for="Email" class="form-label fs-6 fw-bolder text-dark">Kullanıcı Adı</label>
+                            <input type="text" class="form-control form-control-solid" id="Email" name="Email" placeholder="entegrasyonUser" required />
+                        </div>
+
+                        <div class="fv-row mb-8">
+                            <label for="Password" class="form-label fs-6 fw-bolder text-dark">Şifre</label>
+                            <input type="password" class="form-control form-control-solid" id="Password" name="Password" placeholder="entegrasyonPassword" required />
+                        </div>
+
+                    @*     <div class="d-grid mb-10">
+                            <button type="submit" class="btn btn-primary">Giriş Yap</button>
+                        </div> *@
+
+
+                        <div class="d-grid mb-10">
+                            <button type="submit" class="btn btn-primary" id="loginButton" @(TempData["DisableLoginButton"] != null && (bool)TempData["DisableLoginButton"] ? "disabled" : "")>Giriş Yap</button>
+                        </div>
+
+                    @*     @if (TempData["ShowSetupButton"] != null && (bool)TempData["ShowSetupButton"])
+                        {
+                            <div class="d-grid mb-10">
+                                <button type="button" class="btn btn-warning" id="setupButton">Kurulum Yap</button>
+                            </div>
+                        } *@
+
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @TempData["ErrorMessage"]
+                            </div>
+                        }
+                    </form>
+                    <div class="d-grid mb-10" hidden>
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal" hidden>
+                            Ayarlar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- #Sql&&Api Setting -->
+    <!-- Modal içindeki form -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Bağlantı Ayarları</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="settingsForm">
+                        <!-- API Bağlantı Ayarları -->
+                        <div class="mb-3">
+                            <label for="apiUrl" class="form-label">API URL</label>
+                            <input type="text" class="form-control" id="apiUrl" name="apiUrl" placeholder="Örn: https://localhost:" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiPort" class="form-label">API Port Numarası</label>
+                            <input type="number" class="form-control" id="apiPort" name="apiPort" placeholder="Örn: 7122" required>
+                        </div>
+
+                        <!-- SQL Bağlantı Ayarları -->
+                        <div class="mb-3">
+                            <label for="server" class="form-label">Sunucu (Server)</label>
+                            <input type="text" class="form-control" id="server" name="server" placeholder="Örn: localhost" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="database" class="form-label">Veritabanı (Database)</label>
+                            <input type="text" class="form-control" id="database" name="database" placeholder="Örn: MyDatabase" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Kullanıcı Adı (Username)</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Örn: admin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Şifre (Password)</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Şifrenizi girin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="schema" class="form-label">Şema (Schema)</label>
+                            <input type="text" class="form-control" id="schema" name="schema" placeholder="Örn: dbo" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-primary" id="saveSettings">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <script>
+               $(document).ready(function() {
+            $("#setupButton").click(function() {
+                showLoading(); // Yükleme göstergesini göster
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Auth/Setup/", // Doğru URL
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message); // Başarı mesajını göster
+                            setTimeout(function() {
+                                window.location.reload(); // Sayfayı yenile
+                            }, 1500); // 1.5 saniye sonra sayfayı yenile
+                        } else {
+                            toastr.error(response.message); // Hata mesajını göster
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        toastr.error("Kurulum sırasında bir hata oluştu. Lütfen tekrar deneyin."); // Genel hata mesajı
+                    },
+                    complete: function() {
+                        hideLoading(); // Yükleme göstergesini gizle
+                    }
+                });
+            });
+        });
+
+        function showLoading() {
+            // Yükleme göstergesini göster (örneğin, bir spinner)
+            $("#loadingSpinner").show();
+        }
+
+        function hideLoading() {
+            // Yükleme göstergesini gizle
+            $("#loadingSpinner").hide();
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+
+
+
+            // Kullanıcı Ekle butonu için event listener
+            $("#saveSettings").click(function() {
+                kullaniciEkle();
+                 showLoading();
+            });
+
+            // Kullanıcı Ekle fonksiyonu
+            function kullaniciEkle() {
+                var apiUrl = $("#apiUrl").val();
+                var apiPort = $("#apiPort").val();
+                var server = $("#server").val();
+                var database = $("#database").val();
+                var username = $("#username").val();
+                var password = $("#password").val();
+                var schema = $("#schema").val();
+
+          var apiModel = {
+                    ApiUrl: apiUrl,
+                    ApiPort: apiPort
+                };
+
+                var model = {
+                    Server: server,
+                    Database: database,
+                    Username: username,
+                    Password: password,
+                    Schema: schema,
+                };
+
+                // İki modeli birleştir
+                var requestModel = {
+                    model: model,
+                    apiModel: apiModel
+                };
+
+                fetch('/Settings/sqlBaglatinAyarlari', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestModel)
+                })
+                .then(response => response.json()) // Yanıtı JSON olarak parse et
+                .then(data => {
+                    if (data.success) {
+                         toastr.success(data.message);
+                           // $('#settingsModal').modal('hide'); // Modal'ı kapat
+
+                            $('#settingsForm')[0].reset(); // Formu temizle
+                   // window.location.href = '/Settings/Index';
+                        // location.reload(); // Sayfayı yenile
+                    } else {
+                        toastr.error(data.message); // Hata mesajı
+                    }
+                })
+                .catch(error => {
+                    toastr.error("SQL Ayarları eklenirken bir hata oluştu."); // Hata mesajı
+                }).finally(() => {
+                hideLoading(); // Yükleme ekranını gizle
+            });
+            }
+        });
+
+           function showLoading() {
+            // Yükleme göstergesini göster (örneğin, bir spinner)
+            $("#loadingSpinner").show();
+        }
+
+        function hideLoading() {
+            // Yükleme göstergesini gizle
+            $("#loadingSpinner").hide();
+        }
+    </script>
+
+
+<!-- #endregion -->
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#loginForm").submit(function (event) {
+                event.preventDefault(); // Formun normal submit işlemini engelle
+
+                var email = $("#Email").val();
+                var password = $("#Password").val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Auth/Login",
+                    data: { Email: email, Password: password },
+                    success: function (response) {
+                        if (response.success) {
+                            // Giriş başarılı, ana sayfaya yönlendir
+                            window.location.href = "/Home/Index";
+                        } else {
+                            // Giriş başarısız, hata mesajı göster
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        // AJAX hatası durumunda
+                        alert("Hata oluştu. Lütfen daha sonra tekrar deneyin.");
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+
+
+
+    <script>
+
+        $(document).ready(function () {
+            var successMessage = '@TempData["SuccessMessage"]';
+            var infoMessage = '@TempData["InfoMessage"]';
+            var warningMessage = '@TempData["WarningMessage"]';
+            var errorMessage = '@TempData["ErrorMessage"]';
+            if (successMessage) {
+                toastr.success(successMessage);
+            } else if (infoMessage) {
+                toastr.info(infoMessage);
+            } else if (warningMessage) {
+                toastr.warning(warningMessage);
+            }
+            else if (errorMessage) {
+                toastr.error(errorMessage);
+            }
+        });
+
+
+        $(document).ready(function () {
+            var systemErrorMessage = '@TempData["SystemErrorMessage"]';
+
+            if (systemErrorMessage) {
+                // Hata mesajını belirtilen yapıya yerleştir
+                $("#system-error-content").html(systemErrorMessage);
+
+                // Hata mesajını göster
+                $("#system-error-message").show();
+
+                // İptal butonunun tıklama olayı
+                $("#system-error-cancel").click(function () {
+                    // Hata mesajını gizle
+                    $("#system-error-message").hide();
+                });
+
+                // "Ok" butonunun tıklama olayı
+                $("#system-error-ok").click(function () {
+                    // Hata mesajını gizle
+                    $("#system-error-message").hide();
+
+                    // Diğer işlemleri burada yapabilirsiniz
+                });
+            }
+
+
+
+
+            $(document).on('turbolinks:request-start', function () {
+
+        @if (TempData["Loading"] != null && (bool)TempData["Loading"])
+        {
+                                <script>
+                                    $('#loader').show();
+        </script>
+        }
+
+    });
+
+
+
+
+    });
+
+    </script>
+
+
+
+
+    <script>
+                //const button = document.querySelector("#kt_page_loading_overlay");
+                document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll("[data-loading-button-id='kt_page_loading_overlay']");
+
+            buttons.forEach(button => {
+                    button.addEventListener("click", function () {
+                        const loadingEl = document.createElement("div");
+                        document.body.prepend(loadingEl);
+                        loadingEl.classList.add("page-loader");
+                        loadingEl.classList.add("flex-column");
+                        loadingEl.classList.add("bg-dark");
+                        loadingEl.classList.add("bg-opacity-25");
+                        loadingEl.innerHTML = `
+                                                            <span class="spinner-border text-primary" role="status"></span>
+                                                            <span class="text-gray-800 fs-6 fw-semibold mt-5">Loading...</span>
+                                                            `;
+
+                        KTApp.showPageLoading();
+
+                        setTimeout(function () {
+                            KTApp.hidePageLoading();
+                            loadingEl.remove();
+                        }, 2000);
+                    });
+            });
+        });
+
+                toastr.options = {
+                    "closeButton": true,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": true,
+                "positionClass": "toastr-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+        };
+    </script>
+
+
+    <script>
+        var hostUrl = "/assets/";
+    </script>
+
+
+    <!-- begin::Global Javascript Bundle (mandatory for all pages) -->
+    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+    <!-- end::Global Javascript Bundle -->
+    <!-- begin::Vendors Javascript (used for this page only) -->
+
+    <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <!-- end::Vendors Javascript -->
+    <!-- begin::Custom Javascript (used for this page only) -->
+
+
+    <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+    <script src="/assets/js/custom/utilities/modals/create-app.js"></script>
+    <script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+    <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+    <!-- Sonradan Eklediklerim -->
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+
+
+
+</body>
+</html>

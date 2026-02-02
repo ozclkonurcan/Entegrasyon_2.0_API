@@ -1,0 +1,1141 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entegrasyon Login</title>
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+
+    <style>
+        /* Yükleme ekranı stil */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); /* Yarı saydam arka plan */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Diğer öğelerin üzerinde olmasını sağlar */
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+            .loading-spinner .spinner-border {
+                width: 3rem;
+                height: 3rem;
+            }
+
+        /* Form stil */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+            .form-container h2 {
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .form-container .form-control {
+                margin-bottom: 15px;
+            }
+
+            .form-container .btn-primary {
+                width: 100%;
+                padding: 10px;
+                font-size: 16px;
+            }
+    </style>
+</head>
+<body class="justify-content-center align-items-center">
+    <!-- Yükleme ekranı -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <span class="spinner-border text-primary" role="status"></span>
+            <span class="text-gray-800 fs-6 fw-semibold mt-3">Yükleniyor...</span>
+        </div>
+    </div>
+
+    <!--begin::Stepper-->
+    <div class="stepper stepper-pills stepper-column d-flex flex-column flex-lg-row" id="kt_stepper_example_vertical">
+        <!--begin::Aside-->
+        <div class="d-flex flex-row-auto w-100 w-lg-300px">
+            <!--begin::Nav-->
+            <div class="stepper-nav flex-center">
+                <!--begin::Step 1-->
+                <div class="stepper-item me-5 current" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">1</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">API Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">API bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 1-->
+                <!--begin::Step 2-->
+                <div class="stepper-item me-5" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">2</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">Windchill Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">Windchill bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 2-->
+                <!--begin::Step 3-->
+                <div class="stepper-item me-5" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">3</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">SQL Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">SQL bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 3-->
+            </div>
+            <!--end::Nav-->
+        </div>
+        <!--end::Aside-->
+        <!--begin::Content-->
+        <div class="flex-row-fluid">
+            <!--begin::Form-->
+            <form class="form w-lg-500px mx-auto" novalidate="novalidate">
+                <!--begin::Step 1-->
+                <div class="flex-column current" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">API URL</label>
+                        <input type="text" class="form-control form-control-solid" name="apiUrl" placeholder="Örn: https://localhost:" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">API Port Numarası</label>
+                        <input type="number" class="form-control form-control-solid" name="apiPort" placeholder="Örn: 7122" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 1-->
+                <!--begin::Step 2-->
+                <div class="flex-column" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Windchill Sunucu</label>
+                        <input type="text" class="form-control form-control-solid" name="windchillServer" placeholder="Örn: windchill.example.com" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Kullanıcı Adı (Username)</label>
+                        <input type="text" class="form-control form-control-solid" name="windchillUsername" placeholder="Örn: admin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şifre (Password)</label>
+                        <input type="password" class="form-control form-control-solid" name="windchillPassword" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 2-->
+                <!--begin::Step 3-->
+                <div class="flex-column" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Sunucu (Server)</label>
+                        <input type="text" class="form-control form-control-solid" name="server" placeholder="Örn: localhost" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Veritabanı (Database)</label>
+                        <input type="text" class="form-control form-control-solid" name="database" placeholder="Örn: MyDatabase" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Kullanıcı Adı (Username)</label>
+                        <input type="text" class="form-control form-control-solid" name="username" placeholder="Örn: admin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şifre (Password)</label>
+                        <input type="password" class="form-control form-control-solid" name="password" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şema (Schema)</label>
+                        <input type="text" class="form-control form-control-solid" name="schema" placeholder="Örn: dbo" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 3-->
+                <!--begin::Actions-->
+                <div class="d-flex flex-stack">
+                    <!--begin::Wrapper-->
+                    <div class="me-2">
+                        <button type="button" class="btn btn-light btn-active-light-primary" data-kt-stepper-action="previous">
+                            Geri
+                        </button>
+                    </div>
+                    <!--end::Wrapper-->
+                    <!--begin::Wrapper-->
+                    <div>
+                        <button type="button" class="btn btn-primary" data-kt-stepper-action="next">
+                            İleri
+                        </button>
+
+                        <button type="button" class="btn btn-primary" data-kt-stepper-action="submit" id="submitButton">
+                            Kaydet
+                        </button>
+                    </div>
+                    <!--end::Wrapper-->
+                </div>
+                <!--end::Actions-->
+            </form>
+            <!--end::Form-->
+        </div>
+        <!--end::Content-->
+    </div>
+    <!--end::Stepper-->
+    <!-- Kurulum Tamamlanıyor Badge -->
+    <div id="kurulumBadge" class="d-none position-fixed top-0 start-50 translate-middle-x p-3">
+        <div class="badge bg-success text-white rounded-pill p-3">
+            <i class="fas fa-spinner fa-spin me-2"></i> Kurulum Tamamlanıyor...
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Stepper elementini seç
+            var element = document.querySelector("#kt_stepper_example_vertical");
+
+            // Stepper'ı başlat
+            var stepper = new KTStepper(element);
+
+            // İleri butonu için event listener
+            stepper.on("kt.stepper.next", function (stepper) {
+                // Formu devre dışı bırak
+                disableForm();
+
+                // Yükleme ekranını göster
+                showLoading();
+
+                // Geçerli adımı kontrol et
+                if (stepper.getCurrentStepIndex() === 1) {
+                    // API bağlantı ayarlarını kontrol et
+                    var apiUrl = document.querySelector('input[name="apiUrl"]').value;
+                    var apiPort = document.querySelector('input[name="apiPort"]').value;
+
+                    if (!apiUrl || !apiPort) {
+                        toastr.error("Lütfen tüm API bağlantı bilgilerini doldurun.");
+                        enableForm(); // Formu tekrar etkinleştir
+                        hideLoading(); // Yükleme ekranını gizle
+                        return false; // Adım geçişini engelle
+                    }
+
+                    // API bağlantısını kontrol etmek için API'ye istek gönder
+                    fetch('/Settings/CheckApiConnection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            apiUrl: apiUrl,
+                            apiPort: apiPort
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            toastr.success("API bağlantısı başarılı!");
+                            stepper.goNext(); // Bir sonraki adıma geç
+                        } else {
+                            toastr.error("API bağlantısı başarısız: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        toastr.error("API bağlantısı kontrol edilirken bir hata oluştu.");
+                        console.error("Hata:", error);
+                    })
+                    .finally(() => {
+                        enableForm(); // Formu tekrar etkinleştir
+                        hideLoading(); // Yükleme ekranını gizle
+                    });
+
+                    return false; // API isteği tamamlanana kadar adım geçişini engelle
+                } else if (stepper.getCurrentStepIndex() === 2) {
+                    // Windchill bağlantı ayarlarını kontrol et
+                    var windchillServer = document.querySelector('input[name="windchillServer"]').value;
+                    var windchillUsername = document.querySelector('input[name="windchillUsername"]').value;
+                    var windchillPassword = document.querySelector('input[name="windchillPassword"]').value;
+
+                    if (!windchillServer || !windchillUsername || !windchillPassword) {
+                        toastr.error("Lütfen tüm Windchill bağlantı bilgilerini doldurun.");
+                        enableForm(); // Formu tekrar etkinleştir
+                        hideLoading(); // Yükleme ekranını gizle
+                        return false; // Adım geçişini engelle
+                    }
+
+                    // Windchill bağlantısını kontrol etmek için API'ye istek gönder
+                    fetch('/Settings/CheckWindchillConnection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            windchillServer: windchillServer,
+                            windchillUsername: windchillUsername,
+                            windchillPassword: windchillPassword
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            toastr.success("Windchill bağlantısı başarılı!");
+                            stepper.goNext(); // Bir sonraki adıma geç
+                        } else {
+                            toastr.error("Windchill bağlantısı başarısız: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        toastr.error("Windchill bağlantısı kontrol edilirken bir hata oluştu.");
+                        console.error("Hata:", error);
+                    })
+                    .finally(() => {
+                        enableForm(); // Formu tekrar etkinleştir
+                        hideLoading(); // Yükleme ekranını gizle
+                    });
+
+                    return false; // Windchill isteği tamamlanana kadar adım geçişini engelle
+                }
+            });
+
+            // Geri butonu için event listener
+            stepper.on("kt.stepper.previous", function (stepper) {
+                stepper.goPrevious(); // Bir önceki adıma geç
+            });
+
+            // Kaydet butonu için event listener
+            document.getElementById('submitButton').addEventListener('click', function () {
+                // Tüm inputları ve butonları devre dışı bırak
+                disableForm();
+
+                // Kurulum Tamamlanıyor badge'ini göster
+                var kurulumBadge = document.getElementById('kurulumBadge');
+                kurulumBadge.classList.remove('d-none');
+
+                // API, Windchill ve SQL bağlantı ayarlarını topla
+                var apiData = {
+                    apiUrl: document.querySelector('input[name="apiUrl"]').value,
+                    apiPort: document.querySelector('input[name="apiPort"]').value
+                };
+
+                var windchillData = {
+                    windchillServer: document.querySelector('input[name="windchillServer"]').value,
+                    windchillUsername: document.querySelector('input[name="windchillUsername"]').value,
+                    windchillPassword: document.querySelector('input[name="windchillPassword"]').value
+                };
+
+                var sqlData = {
+                    server: document.querySelector('input[name="server"]').value,
+                    database: document.querySelector('input[name="database"]').value,
+                    username: document.querySelector('input[name="username"]').value,
+                    password: document.querySelector('input[name="password"]').value,
+                    schema: document.querySelector('input[name="schema"]').value
+                };
+
+                // Tüm bağlantı ayarlarını tek bir istekle gönder
+                saveSettings('/Settings/sqlBaglantiAyarlari', {
+                    SqlModel: sqlData,
+                    ApiModel: apiData,
+                    WindchillModel: windchillData
+                })
+                .then(response => {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        window.location.href = response.redirectUrl; // Login sayfasına yönlendir
+                    } else {
+                        toastr.error(response.message);
+                    }
+                })
+                .catch(error => {
+                    toastr.error("Kurulum sırasında bir hata oluştu: " + error.message);
+                })
+                .finally(() => {
+                    // Kurulum Tamamlanıyor badge'ini gizle
+                    kurulumBadge.classList.add('d-none');
+                    enableForm(); // Formu tekrar etkinleştir
+                });
+            });
+
+            // Formu devre dışı bırak
+            function disableForm() {
+                var inputs = document.querySelectorAll('input, button');
+                inputs.forEach(input => input.disabled = true);
+            }
+
+            // Formu etkinleştir
+            function enableForm() {
+                var inputs = document.querySelectorAll('input, button');
+                inputs.forEach(input => input.disabled = false);
+            }
+
+            // Yükleme ekranını göster
+            function showLoading() {
+                var loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.style.display = 'flex';
+            }
+
+            // Yükleme ekranını gizle
+            function hideLoading() {
+                var loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.style.display = 'none';
+            }
+
+            // Ayarları kaydetmek için genel bir fonksiyon
+            function saveSettings(url, data) {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('İstek başarısız: ' + response.statusText);
+                    }
+                    return response.json();
+                });
+            }
+        });
+    </script>
+
+    <!-- Diğer script dosyaları -->
+    <!-- begin::Global Javascript Bundle (mandatory for all pages) -->
+    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+    <!-- end::Global Javascript Bundle -->
+    <!-- begin::Vendors Javascript (used for this page only) -->
+
+    <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <!-- end::Vendors Javascript -->
+    <!-- begin::Custom Javascript (used for this page only) -->
+
+
+    <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+    <script src="/assets/js/custom/utilities/modals/create-app.js"></script>
+    <script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+    <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+    <!-- Sonradan Eklediklerim -->
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+@* @{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entegrasyon Login</title>
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+
+<style>
+    /* Yükleme ekranı stil */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9); /* Yarı saydam arka plan */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Diğer öğelerin üzerinde olmasını sağlar */
+    }
+
+    .loading-spinner {
+        text-align: center;
+    }
+
+        .loading-spinner .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+    /* Form stil */
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-container .form-control {
+            margin-bottom: 15px;
+        }
+
+        .form-container .btn-primary {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+</style>
+</head>
+<body class="justify-content-center align-items-center">
+    <!-- Yükleme ekranı -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <span class="spinner-border text-primary" role="status"></span>
+            <span class="text-gray-800 fs-6 fw-semibold mt-3">Yükleniyor...</span>
+        </div>
+    </div>
+
+
+
+
+    <!--begin::Stepper-->
+    <div class="stepper stepper-pills stepper-column d-flex flex-column flex-lg-row" id="kt_stepper_example_vertical">
+        <!--begin::Aside-->
+        <div class="d-flex flex-row-auto w-100 w-lg-300px">
+            <!--begin::Nav-->
+            <div class="stepper-nav flex-center">
+                <!--begin::Step 1-->
+                <div class="stepper-item me-5 current" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">1</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">API Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">API bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 1-->
+                <!--begin::Step 2-->
+                <div class="stepper-item me-5" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">2</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">Windchill Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">Windchill bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 2-->
+                <!--begin::Step 3-->
+                <div class="stepper-item me-5" data-kt-stepper-element="nav">
+                    <div class="stepper-wrapper d-flex align-items-center">
+                        <div class="stepper-icon w-40px h-40px">
+                            <i class="stepper-check fas fa-check"></i>
+                            <span class="stepper-number">3</span>
+                        </div>
+                        <div class="stepper-label">
+                            <h3 class="stepper-title">SQL Bağlantı Ayarları</h3>
+                            <div class="stepper-desc">SQL bağlantı bilgilerini girin</div>
+                        </div>
+                    </div>
+                    <div class="stepper-line h-40px"></div>
+                </div>
+                <!--end::Step 3-->
+            </div>
+            <!--end::Nav-->
+        </div>
+        <!--end::Aside-->
+        <!--begin::Content-->
+        <div class="flex-row-fluid">
+            <!--begin::Form-->
+            <form class="form w-lg-500px mx-auto" novalidate="novalidate">
+                <!--begin::Step 1-->
+                <div class="flex-column current" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">API URL</label>
+                        <input type="text" class="form-control form-control-solid" name="apiUrl" placeholder="Örn: https://localhost:" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">API Port Numarası</label>
+                        <input type="number" class="form-control form-control-solid" name="apiPort" placeholder="Örn: 7122" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 1-->
+                <!--begin::Step 2-->
+                <div class="flex-column" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Windchill Sunucu</label>
+                        <input type="text" class="form-control form-control-solid" name="windchillServer" placeholder="Örn: windchill.example.com" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Kullanıcı Adı (Username)</label>
+                        <input type="text" class="form-control form-control-solid" name="windchillUsername" placeholder="Örn: admin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şifre (Password)</label>
+                        <input type="password" class="form-control form-control-solid" name="windchillPassword" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 2-->
+                <!--begin::Step 3-->
+                <div class="flex-column" data-kt-stepper-element="content">
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Sunucu (Server)</label>
+                        <input type="text" class="form-control form-control-solid" name="server" placeholder="Örn: localhost" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Veritabanı (Database)</label>
+                        <input type="text" class="form-control form-control-solid" name="database" placeholder="Örn: MyDatabase" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Kullanıcı Adı (Username)</label>
+                        <input type="text" class="form-control form-control-solid" name="username" placeholder="Örn: admin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şifre (Password)</label>
+                        <input type="password" class="form-control form-control-solid" name="password" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <!--end::Input group-->
+                    <!--begin::Input group-->
+                    <div class="fv-row mb-10">
+                        <label class="form-label">Şema (Schema)</label>
+                        <input type="text" class="form-control form-control-solid" name="schema" placeholder="Örn: dbo" required>
+                    </div>
+                    <!--end::Input group-->
+                </div>
+                <!--end::Step 3-->
+                <!--begin::Actions-->
+                <div class="d-flex flex-stack">
+                    <!--begin::Wrapper-->
+                    <div class="me-2">
+                        <button type="button" class="btn btn-light btn-active-light-primary" data-kt-stepper-action="previous">
+                            Geri
+                        </button>
+                    </div>
+                    <!--end::Wrapper-->
+                    <!--begin::Wrapper-->
+                    <div>
+                        <button type="button" class="btn btn-primary" data-kt-stepper-action="next">
+                            İleri
+                        </button>
+
+                        <button type="button" class="btn btn-primary" data-kt-stepper-action="submit" id="submitButton">
+                            Kaydet
+                        </button>
+                    </div>
+                    <!--end::Wrapper-->
+                </div>
+                <!--end::Actions-->
+            </form>
+            <!--end::Form-->
+        </div>
+        <!--end::Content-->
+    </div>
+    <!--end::Stepper-->
+    <!-- Kurulum Tamamlanıyor Badge -->
+    <div id="kurulumBadge" class="d-none position-fixed top-0 start-50 translate-middle-x p-3">
+        <div class="badge bg-success text-white rounded-pill p-3">
+            <i class="fas fa-spinner fa-spin me-2"></i> Kurulum Tamamlanıyor...
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Stepper elementini seç
+            var element = document.querySelector("#kt_stepper_example_vertical");
+
+            // Stepper'ı başlat
+            var stepper = new KTStepper(element);
+
+            // İleri butonu için event listener
+            stepper.on("kt.stepper.next", function (stepper) {
+                // Geçerli adımı kontrol et
+                if (stepper.getCurrentStepIndex() === 1) {
+                    // API bağlantı ayarlarını kontrol et
+                    var apiUrl = document.querySelector('input[name="apiUrl"]').value;
+                    var apiPort = document.querySelector('input[name="apiPort"]').value;
+
+                    if (!apiUrl || !apiPort) {
+                        toastr.error("Lütfen tüm API bağlantı bilgilerini doldurun.");
+                        return false; // Adım geçişini engelle
+                    }
+
+                    // API bağlantısını kontrol etmek için API'ye istek gönder
+                    fetch('/Settings/CheckApiConnection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            apiUrl: apiUrl,
+                            apiPort: apiPort
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            toastr.success("API bağlantısı başarılı!");
+                            stepper.goNext(); // Bir sonraki adıma geç
+                        } else {
+                            toastr.error("API bağlantısı başarısız: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        toastr.error("API bağlantısı kontrol edilirken bir hata oluştu.");
+                        console.error("Hata:", error);
+                    });
+
+                    return false; // API isteği tamamlanana kadar adım geçişini engelle
+                } else if (stepper.getCurrentStepIndex() === 2) {
+                    // Windchill bağlantı ayarlarını kontrol et
+                    var windchillServer = document.querySelector('input[name="windchillServer"]').value;
+                    var windchillUsername = document.querySelector('input[name="windchillUsername"]').value;
+                    var windchillPassword = document.querySelector('input[name="windchillPassword"]').value;
+
+                    if (!windchillServer || !windchillUsername || !windchillPassword) {
+                        toastr.error("Lütfen tüm Windchill bağlantı bilgilerini doldurun.");
+                        return false; // Adım geçişini engelle
+                    }
+
+                    // Windchill bağlantısını kontrol etmek için API'ye istek gönder
+                    fetch('/Settings/CheckWindchillConnection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            windchillServer: windchillServer,
+                            windchillUsername: windchillUsername,
+                            windchillPassword: windchillPassword
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            toastr.success("Windchill bağlantısı başarılı!");
+                            stepper.goNext(); // Bir sonraki adıma geç
+                        } else {
+                            toastr.error("Windchill bağlantısı başarısız: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        toastr.error("Windchill bağlantısı kontrol edilirken bir hata oluştu.");
+                        console.error("Hata:", error);
+                    });
+
+                    return false; // Windchill isteği tamamlanana kadar adım geçişini engelle
+                }
+            });
+
+            // Geri butonu için event listener
+            stepper.on("kt.stepper.previous", function (stepper) {
+                stepper.goPrevious(); // Bir önceki adıma geç
+            });
+
+            // Kaydet butonu için event listener
+                document.getElementById('submitButton').addEventListener('click', function () {
+            // Tüm inputları ve butonları devre dışı bırak
+            disableForm();
+
+            // Kurulum Tamamlanıyor badge'ini göster
+            var kurulumBadge = document.getElementById('kurulumBadge');
+            kurulumBadge.classList.remove('d-none');
+
+            // API, Windchill ve SQL bağlantı ayarlarını topla
+            var apiData = {
+                apiUrl: document.querySelector('input[name="apiUrl"]').value,
+                apiPort: document.querySelector('input[name="apiPort"]').value
+            };
+
+            var windchillData = {
+                windchillServer: document.querySelector('input[name="windchillServer"]').value,
+                windchillUsername: document.querySelector('input[name="windchillUsername"]').value,
+                windchillPassword: document.querySelector('input[name="windchillPassword"]').value
+            };
+
+            var sqlData = {
+                server: document.querySelector('input[name="server"]').value,
+                database: document.querySelector('input[name="database"]').value,
+                username: document.querySelector('input[name="username"]').value,
+                password: document.querySelector('input[name="password"]').value,
+                schema: document.querySelector('input[name="schema"]').value
+            };
+
+            // Tüm bağlantı ayarlarını tek bir istekle gönder
+            saveSettings('/Settings/sqlBaglantiAyarlari', {
+                SqlModel: sqlData,
+                ApiModel: apiData,
+                WindchillModel: windchillData
+            })
+            .then(response => {
+                if (response.success) {
+                    toastr.success(response.message);
+                    window.location.href = response.redirectUrl; // Login sayfasına yönlendir
+                } else {
+                    toastr.error(response.message);
+                }
+            })
+            .catch(error => {
+                toastr.error("Kurulum sırasında bir hata oluştu: " + error.message);
+            })
+            .finally(() => {
+                // Kurulum Tamamlanıyor badge'ini gizle
+                kurulumBadge.classList.add('d-none');
+                enableForm(); // Formu tekrar etkinleştir
+            });
+        });
+            // Formu devre dışı bırak
+            function disableForm() {
+                var inputs = document.querySelectorAll('input, button');
+                inputs.forEach(input => input.disabled = true);
+            }
+
+            // Formu etkinleştir
+            function enableForm() {
+                var inputs = document.querySelectorAll('input, button');
+                inputs.forEach(input => input.disabled = false);
+            }
+
+            // Ayarları kaydetmek için genel bir fonksiyon
+            function saveSettings(url, data) {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('İstek başarısız: ' + response.statusText);
+                    }
+                    return response.json();
+                });
+            }
+        });
+    </script>
+
+
+    <script>
+        $(document).ready(function() {
+
+
+
+            // Kullanıcı Ekle butonu için event listener
+            $("#saveSettings").click(function() {
+                kullaniciEkle();
+                 showLoading();
+            });
+
+            // Kullanıcı Ekle fonksiyonu
+            function kullaniciEkle() {
+
+                var apiUrl = $("#apiUrl").val();
+                var apiPort = $("#apiPort").val();
+                var server = $("#server").val();
+                var database = $("#database").val();
+                var username = $("#username").val();
+                var password = $("#password").val();
+                var schema = $("#schema").val();
+
+          var apiModel = {
+                    ApiUrl: apiUrl,
+                    ApiPort: apiPort
+                };
+
+                var model = {
+                    Server: server,
+                    Database: database,
+                    Username: username,
+                    Password: password,
+                    Schema: schema,
+                };
+
+                // İki modeli birleştir
+                var requestModel = {
+                    model: model,
+                    apiModel: apiModel
+                };
+
+                fetch('/Settings/sqlBaglatinAyarlari', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestModel)
+                })
+                .then(response => response.json()) // Yanıtı JSON olarak parse et
+                .then(data => {
+                    if (data.success) {
+                         toastr.success(data.message);
+                           // $('#settingsModal').modal('hide'); // Modal'ı kapat
+
+                            // $('#settingsForm')[0].reset(); // Formu temizle
+                             window.location.href = '/Auth/Login';
+                        // location.reload(); // Sayfayı yenile
+                    } else {
+                        toastr.error(data.message); // Hata mesajı
+                    }
+                })
+                .catch(error => {
+                    toastr.error("SQL Ayarları eklenirken bir hata oluştu."); // Hata mesajı
+                    console.log("HATA mesajı : " + error)
+                }).finally(() => {
+                hideLoading(); // Yükleme ekranını gizle
+            });
+            }
+        });
+
+           function showLoading() {
+            // Yükleme göstergesini göster (örneğin, bir spinner)
+            $("#loadingSpinner").show();
+        }
+
+        function hideLoading() {
+            // Yükleme göstergesini gizle
+            $("#loadingSpinner").hide();
+        }
+    </script>
+
+
+
+
+
+    <script>
+
+        $(document).ready(function () {
+            var successMessage = '@TempData["SuccessMessage"]';
+            var infoMessage = '@TempData["InfoMessage"]';
+            var warningMessage = '@TempData["WarningMessage"]';
+            var errorMessage = '@TempData["ErrorMessage"]';
+            if (successMessage) {
+                toastr.success(successMessage);
+            } else if (infoMessage) {
+                toastr.info(infoMessage);
+            } else if (warningMessage) {
+                toastr.warning(warningMessage);
+            }
+            else if (errorMessage) {
+                toastr.error(errorMessage);
+            }
+        });
+
+
+        $(document).ready(function () {
+            var systemErrorMessage = '@TempData["SystemErrorMessage"]';
+
+            if (systemErrorMessage) {
+                // Hata mesajını belirtilen yapıya yerleştir
+                $("#system-error-content").html(systemErrorMessage);
+
+                // Hata mesajını göster
+                $("#system-error-message").show();
+
+                // İptal butonunun tıklama olayı
+                $("#system-error-cancel").click(function () {
+                    // Hata mesajını gizle
+                    $("#system-error-message").hide();
+                });
+
+                // "Ok" butonunun tıklama olayı
+                $("#system-error-ok").click(function () {
+                    // Hata mesajını gizle
+                    $("#system-error-message").hide();
+
+                    // Diğer işlemleri burada yapabilirsiniz
+                });
+            }
+
+
+
+
+            $(document).on('turbolinks:request-start', function () {
+
+        @if (TempData["Loading"] != null && (bool)TempData["Loading"])
+        {
+                                    <script>
+                                        $('#loader').show();
+        </script>
+        }
+
+    });
+
+
+
+
+    });
+
+    </script>
+
+
+
+
+    <script>
+                //const button = document.querySelector("#kt_page_loading_overlay");
+                document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll("[data-loading-button-id='kt_page_loading_overlay']");
+
+            buttons.forEach(button => {
+                    button.addEventListener("click", function () {
+                        const loadingEl = document.createElement("div");
+                        document.body.prepend(loadingEl);
+                        loadingEl.classList.add("page-loader");
+                        loadingEl.classList.add("flex-column");
+                        loadingEl.classList.add("bg-dark");
+                        loadingEl.classList.add("bg-opacity-25");
+                        loadingEl.innerHTML = `
+                                                            <span class="spinner-border text-primary" role="status"></span>
+                                                            <span class="text-gray-800 fs-6 fw-semibold mt-5">Loading...</span>
+                                                            `;
+
+                        KTApp.showPageLoading();
+
+                        setTimeout(function () {
+                            KTApp.hidePageLoading();
+                            loadingEl.remove();
+                        }, 2000);
+                    });
+            });
+        });
+
+                toastr.options = {
+                    "closeButton": true,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": true,
+                "positionClass": "toastr-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+        };
+    </script>
+
+
+    <script>
+        var hostUrl = "/assets/";
+    </script>
+
+
+    <!-- begin::Global Javascript Bundle (mandatory for all pages) -->
+    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/assets/plugins/custom/flot/flot.bundle.js"></script>
+    <!-- end::Global Javascript Bundle -->
+    <!-- begin::Vendors Javascript (used for this page only) -->
+    <script src="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.js"></script>
+    <script src="/dropzoneJS/dropzone.js"></script>
+    <script src="/dropzoneJS/dropzoneStockCodeUpdate.js"></script>
+    <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <!-- end::Vendors Javascript -->
+    <!-- begin::Custom Javascript (used for this page only) -->
+
+    <script src="/assets/js/custom/apps/calendar/calendar.js"></script>
+    <script src="/assets/js/widgets.bundle.js"></script>
+    <script src="/assets/js/custom/widgets.js"></script>
+    <script src="/assets/js/custom/apps/chat/chat.js"></script>
+    <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+    <script src="/assets/js/custom/utilities/modals/create-app.js"></script>
+    <script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+    <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+    <script src="/assets/js/custom/authentication/sign-up/general.js"></script>
+    <!-- Sonradan Eklediklerim -->
+
+    <script src="/assets/js/custom/apps/ecommerce/sales/listing.js"></script>
+
+    <script src="/assets/js/custom/apps/user-management/roles/list/add.js"></script>
+    <script src="/assets/js/custom/apps/user-management/roles/list/update-role.js"></script>
+
+
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+</body>
+</html> *@

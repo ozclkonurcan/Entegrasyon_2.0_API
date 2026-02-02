@@ -1,0 +1,49 @@
+﻿@* Başarı, Bilgi ve Uyarı alertleri (üst ortada, fixed) *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-primary alert-dismissible position-fixed top-0 start-50 translate-middle-x mt-3" style="max-width:500px; width:90%; z-index:1050;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-2 text-primary me-2"></i>
+            <strong class="me-1">Başarılı!</strong>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible position-fixed top-0 start-50 translate-middle-x mt-3" style="max-width:500px; width:90%; z-index:1050;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle-fill fs-2 text-info me-2"></i>
+            <strong class="me-1">Bilgi!</strong>
+            <span>@TempData["InfoMessage"]</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible position-fixed top-0 start-50 translate-middle-x mt-3" style="max-width:500px; width:90%; z-index:1050;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-2 text-warning me-2"></i>
+            <strong class="me-1">Uyarı!</strong>
+            <span>@TempData["WarningMessage"]</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+@* Hata alerti (Error) - Ekranın tam ortasında, sadece "Tamam" butonuyla kapanır *@
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible position-fixed top-50 start-50 translate-middle" style="max-width:500px; width:90%; z-index:1060;">
+        <div class="text-center">
+            <i class="bi bi-x-circle-fill fs-2 text-danger mb-2"></i>
+            <h4 class="fw-bold mb-2">Hata</h4>
+            <p class="mb-3">@TempData["ErrorMessage"]</p>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="alert">Tamam</button>
+        </div>
+    </div>
+}

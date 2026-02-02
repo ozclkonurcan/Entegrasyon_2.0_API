@@ -1,0 +1,503 @@
+﻿@model WEB.Models.SettingsIndexViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<div class="row g-3">
+    <div class="col-md-2" hidden>
+        <button class="btn btn-primary btn-sm btn-outline w-100" data-bs-toggle="modal" data-bs-target="#sqlBaglantiAyarlari" hidden>SQL Bağlantı Ayarları</button>
+    </div>
+    <div class="col-md-2" hidden>
+        <button class="btn btn-primary btn-sm btn-outline w-100" data-bs-toggle="modal" data-bs-target="#kullaniciAyarlari" hidden>Kullanıcı Ayarları</button>
+    </div>
+    <div class="col-md-2">
+        <a asp-action="Log" asp-controller="Settings" class="btn btn-primary btn-sm btn-outline w-100">Log Takip</a>
+    </div>
+    <div class="col-md-2">
+        <a asp-action="WTPartLog" asp-controller="Settings" class="btn btn-primary btn-sm btn-outline w-100">WTPartLog Takip</a>
+    </div>
+
+    <div class="col-md-2">
+        <a asp-action="WTPartAlternateLog" asp-controller="Settings" class="btn btn-primary btn-sm btn-outline w-100">Muadil Log Takip</a>
+    </div>
+    <div class="col-md-2" hidden>
+        <button class="btn btn-primary btn-sm btn-outline w-100" data-bs-toggle="modal" data-bs-target="#roleSettingsModal" hidden >Rol Ayarları</button>
+    </div>
+    <div class="col-md-2" hidden>
+        <button class="btn btn-primary btn-sm btn-outline w-100" data-bs-toggle="modal" data-bs-target="#moduleSettingsModal" hidden>Modül Ayarları</button>
+    </div>
+
+@*     <div class="col-md-2">
+        <button class="btn btn-primary btn-sm btn-outline w-100">**** Ayarları</button>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary btn-sm btn-outline w-100">**** Ayarları</button>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary btn-sm btn-outline w-100">**** Ayarları</button>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary btn-sm btn-outline w-100">**** Ayarları</button>
+    </div> *@
+</div>
+
+<!-- #region name -->
+
+
+
+<!-- Modal SQL Bağlantı Ayarları -->
+<div class="modal fade" id="sqlBaglantiAyarlari" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="sqlBaglantiAyarlariLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sqlBaglantiAyarlariLabel">SQL Bağlantı Ayarları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="server" class="form-label">Sunucu Adresi</label>
+                        <input type="text" class="form-control" id="server" name="server" placeholder="Sunucu adresini girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="database" class="form-label">Veritabanı</label>
+                        <input type="text" class="form-control" id="database" name="database" placeholder="Veritabanı adını girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Kullanıcı Adı</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Kullanıcı adını girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Şifre</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schema" class="form-label">Şema</label>
+                        <input type="text" class="form-control" id="schema" name="schema" placeholder="Şema adını girin" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal SQL Bağlantı Ayarları -->
+<div class="modal fade" id="kullaniciAyarlari" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="kullaniciAyarlariLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="kullaniciAyarlariLabel">Kullanıcı Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="kullaniciEkleForm">
+                    <div class="mb-3">
+                        <label for="kullaniciAra" class="form-label">Kullanıcı Ara</label>
+                        <input type="text" class="form-control" id="kullaniciAra" placeholder="Kullanıcı adı veya e-posta ile ara">
+                        <button type="button" id="btnKullaniciAra" class="btn btn-secondary mt-2">Ara</button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Tam Adı</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-posta</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Şifre</label>
+                        <input type="password" class="form-control" id="inpPassword" name="password" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rol</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="0">Kullanıcı</option>
+                            <option value="1">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" id="btnKullaniciEkle">Oluştur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rol Ayarları -->
+<div class="modal fade" id="roleSettingsModal" tabindex="-1" aria-labelledby="roleSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleSettingsModalLabel">Rol Ayarları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roleSettingsForm">
+                    <!-- Gizli ID alanı, güncelleme işlemleri için -->
+                    <input type="hidden" id="roleId" name="id">
+
+                    <div class="mb-3">
+                        <label for="roleName" class="form-label">Rol Adı</label>
+                        <input type="text" class="form-control" id="roleName" name="roleName" placeholder="Rol adını girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sourceApi" class="form-label">Kaynak API</label>
+                        <input type="text" class="form-control" id="sourceApi" name="sourceApi" placeholder="Kaynak API'yi girin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="isActive" class="form-label">Aktif Mi?</label>
+                        <select class="form-control" id="isActive" name="isActive" required>
+                            <option value="true">Aktif</option>
+                            <option value="false">Pasif</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="processTagID" class="form-label">Process Tag</label>
+                        <select class="form-control" id="processTagID" name="ProcessTagId" required>
+                            <option value="">Seçiniz...</option>
+                            <!-- Seçenekler burada eklenecek -->
+                        </select>
+
+
+                    </div>
+
+                    <hr />
+                    <h6>Hedef API'ler</h6>
+                    <div id="roleEndpointsContainer">
+                        <div class="row mb-2 endpoint-row">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="addRoleEndpointBtn" class="btn btn-secondary btn-sm">Yeni Hedef API Ekle</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="saveRoleSettingsBtn" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Modül Ayarları -->
+<div class="modal fade" id="moduleSettingsModal" tabindex="-1" aria-labelledby="moduleSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moduleSettingsModalLabel">Modül Ayarları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <form id="moduleSettingsForm">
+                    <!-- Gizli ID alanı, güncelleme işlemleri için -->
+                    <input type="hidden" id="moduleSettingId" name="id">
+
+                    <div class="mb-3">
+                        <label for="settingsName" class="form-label">Modül Adı</label>
+                        <input type="text" class="form-control" id="settingsName" name="settingsName" placeholder="Modül adını girin (örneğin: WTPartReleased)" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="settingsValue" class="form-label">Modül Durumu</label>
+                        <select class="form-control" id="settingsValue" name="settingsValue" required>
+                            <option value="1">Aktif</option>
+                            <option value="0">Pasif</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="saveModuleSettingsBtn" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        // API'den Process Tag'leri MVC controller üzerinden çekip dropdown'ı doldur
+        function loadProcessTags() {
+            $.ajax({
+                url: '/Settings/GetProcessTags', // MVC controller action'ı
+                type: 'GET',
+                contentType: 'application/json',
+                success: function (data) {
+                    var $processTagDropdown = $("#processTagID");
+                    $processTagDropdown.empty();
+                    $processTagDropdown.append('<option value="">Seçiniz...</option>');
+                    $.each(data, function (i, tag) {
+                        $processTagDropdown.append('<option value="' + tag.processTagID + '">' + tag.tagName + '</option>');
+                    });
+                },
+                error: function (err) {
+                    console.error("Process Tag'ler alınırken hata oluştu:", err);
+                    toastr.error("Process Tag'ler alınırken bir hata oluştu.");
+                }
+            });
+        }
+
+        
+
+        // Sayfa yüklendiğinde Process Tag'leri yükle
+        loadProcessTags();
+
+        // Yeni endpoint ekleme butonu
+        $("#addRoleEndpointBtn").click(function () {
+            var endpointRow = `<div class="row mb-2 endpoint-row">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                    </div>
+                                </div>`;
+            $("#roleEndpointsContainer").append(endpointRow);
+        });
+
+        // Endpoint satırını silmek için
+        $(document).on("click", ".remove-endpoint", function () {
+            $(this).closest(".endpoint-row").remove();
+        });
+
+        var processTagValue = parseInt($("#processTagID").val()) || 0;
+
+        console.log(processTagValue);
+        debugger;
+        // Rol ayarlarını kaydetmek için AJAX
+        $("#saveRoleSettingsBtn").click(function () {
+           var formData = {
+        roleName: $("#roleName").val(),
+        sourceApi: $("#sourceApi").val(),
+        isActive: $("#isActive").val() === "true",
+        processTagId: parseInt($("#processTagID").val()) || 0, // doğru id kullanılıyor
+        endpoints: []
+    };
+
+            $("#roleEndpointsContainer .endpoint-row").each(function () {
+                var targetApi = $(this).find('input[name="targetApi"]').val();
+                var endpoint = $(this).find('input[name="endpoint"]').val();
+                formData.endpoints.push({ targetApi: targetApi, endpoint: endpoint, isActive: true });
+            });
+
+            $.ajax({
+                url: '/Settings/SaveRoleMapping',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    toastr.success("Rol ayarları başarıyla kaydedildi.");
+                    location.reload();
+                },
+                error: function (err) {
+                    toastr.error("Rol ayarları kaydedilirken bir hata oluştu.");
+                }
+            });
+        });
+
+        // Rol düzenleme modalı açıldığında verileri doldurma örneği
+        $('#editRoleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var roleData = button.data('role'); // Rol verileri JSON formatında gönderilmiş olmalı
+            var modal = $(this);
+            modal.find("#editRoleId").val(roleData.id);
+            modal.find("#editRoleName").val(roleData.roleName);
+            modal.find("#editSourceApi").val(roleData.sourceApi);
+            modal.find("#editIsActive").val(roleData.isActive.toString());
+            modal.find("#editProcessTagId").val(roleData.processTagId);
+            var endpointsContainer = modal.find("#editEndpointsContainer");
+            endpointsContainer.empty();
+            if(roleData.endpoints && roleData.endpoints.length > 0) {
+                roleData.endpoints.forEach(function(ep) {
+                    var endpointRow = `<div class="row mb-2 endpoint-row">
+                                            <div class="col-md-5">
+                                                <input type="text" class="form-control" placeholder="Target API" name="targetApi" value="${ep.targetApi}" required>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" value="${ep.endpoint}" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                            </div>
+                                        </div>`;
+                    endpointsContainer.append(endpointRow);
+                });
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        // Yeni endpoint ekleme butonu için event listener
+        $("#addRoleEndpointBtn").click(function () {
+            var endpointRow = `<div class="row mb-2 endpoint-row">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                    </div>
+                                </div>`;
+            $("#roleEndpointsContainer").append(endpointRow);
+        });
+
+        // Endpoint satırını silmek için event listener
+        $(document).on("click", ".remove-endpoint", function () {
+            $(this).closest(".endpoint-row").remove();
+        });
+
+        // Rol ayarlarını kaydetmek için AJAX örneği
+         $("#saveRoleSettingsBtn").click(function () {
+        var formData = {
+            roleName: $("#roleName").val(),
+            sourceApi: $("#sourceApi").val(),
+            isActive: $("#isActive").val() === "true",
+            endpoints: []
+        };
+
+        $("#roleEndpointsContainer .endpoint-row").each(function () {
+            var targetApi = $(this).find('input[name="targetApi"]').val();
+            var endpoint = $(this).find('input[name="endpoint"]').val();
+            formData.endpoints.push({ targetApi: targetApi, endpoint: endpoint, isActive: true });
+        });
+
+        $.ajax({
+            url: '/Settings/SaveRoleMapping',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function (response) {
+                toastr.success("Rol ayarları başarıyla kaydedildi.");
+                location.reload();
+            },
+            error: function (err) {
+                toastr.error("Rol ayarları kaydedilirken bir hata oluştu.");
+            }
+        });
+    });
+
+
+        // Rol düzenleme modalı açıldığında verileri doldurma örneği
+        $('#editRoleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var roleData = button.data('role'); // Rol verileri JSON olarak gönderilmiş olmalı
+            var modal = $(this);
+            modal.find("#editRoleId").val(roleData.id);
+            modal.find("#editRoleName").val(roleData.roleName);
+            modal.find("#editSourceApi").val(roleData.sourceApi);
+            modal.find("#editIsActive").val(roleData.isActive.toString());
+            var endpointsContainer = modal.find("#editEndpointsContainer");
+            endpointsContainer.empty();
+            if(roleData.endpoints && roleData.endpoints.length > 0) {
+                roleData.endpoints.forEach(function(ep) {
+                    var endpointRow = `<div class="row mb-2 endpoint-row">
+                                            <div class="col-md-5">
+                                                <input type="text" class="form-control" placeholder="Target API" name="targetApi" value="${ep.targetApi}" required>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" value="${ep.endpoint}" required>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                            </div>
+                                        </div>`;
+                    endpointsContainer.append(endpointRow);
+                });
+            }
+        });
+    });
+</script>
+
+
+<script>
+         $(document).ready(function() {
+        // Kullanıcı Ara butonu için event listener
+        $("#btnKullaniciAra").click(function() {
+            kullaniciAra();
+        });
+
+        // Kullanıcı Ekle butonu için event listener
+        $("#btnKullaniciEkle").click(function() {
+            kullaniciEkle();
+        });
+
+            function kullaniciAra() {
+        var query = $("#kullaniciAra").val();
+        fetch(`/Settings/KullaniciAra?query=${query}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // console.log("API Yanıtı:", data); // Yanıtı konsola yazdır
+                if (data && data.length > 0) {
+                    $("#fullName").val(data[0].fullName); // FullName alanını doldur
+                    $("#email").val(data[0].eMail); // EMail alanını doldur
+                    toastr.success("Kullanıcı bilgileri başarıyla alındı.");
+                } else {
+                    toastr.warning("Kullanıcı bulunamadı.");
+                }
+            })
+            .catch(error => {
+                // console.error('Hata:', error);
+                toastr.error("Kullanıcı aranırken bir hata oluştu: " + error.message);
+            });
+    }
+
+        // Kullanıcı Ekle fonksiyonu
+        function kullaniciEkle() {
+            var fullName = $("#fullName").val();
+            var email = $("#email").val();
+            var password = $("#inpPassword").val();
+            var role = $("#role").val();
+
+            fetch('/Settings/KullaniciEkle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fullName, email, password,role })
+            })
+            .then(response => {
+                if (response.ok) {
+                    toastr.success("Kullanıcı başarıyla eklendi."); // Başarılı mesaj
+                    location.reload();
+                } else {
+                    toastr.error("Kullanıcı eklenirken bir hata oluştu."); // Hata mesajı
+                }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                // toastr.error("Kullanıcı eklenirken bir hata oluştu."); // Hata mesajı
+            });
+        }
+    });
+</script>

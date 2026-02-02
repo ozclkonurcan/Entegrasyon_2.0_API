@@ -1,0 +1,256 @@
+﻿@{
+    ViewBag.Title = "Log Ekranı";
+}
+
+<div class="container-fluid py-5">
+    <!-- Log Listesi -->
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">Loglar</h3>
+            <div class="d-flex align-items-center">
+                <!-- Toplam Log Sayısı -->
+                <div class="badge bg-light text-dark fs-6 me-3">
+                    <i class="fas fa-list"></i> Toplam Log: @ViewBag.TotalLogs
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filtreleme Formu -->
+            <form asp-action="LogByDate" asp-controller="Settings" method="get" class="mb-4">
+                <div class="row g-3">
+                    <!-- Tarih Filtresi -->
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Tarih</label>
+                        <input type="date" name="date" class="form-control" value="@ViewBag.SelectedDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <!-- Level Filtresi -->
+                    <div class="col-md-3">
+                        <label for="level" class="form-label">Level</label>
+                        <select name="level" class="form-select">
+                            <option value="">Tümü</option>
+                            <option value="Information" selected="@(ViewBag.SelectedLevel == "Information" ? "selected" : null)">Information</option>
+                            <option value="Error" selected="@(ViewBag.SelectedLevel == "Error" ? "selected" : null)">Error</option>
+                            <option value="Warning" selected="@(ViewBag.SelectedLevel == "Warning" ? "selected" : null)">Warning</option>
+                        </select>
+                    </div>
+                    <!-- Kullanıcı Adı Filtresi -->
+                    <div class="col-md-3">
+                        <label for="kullaniciAdi" class="form-label">Kullanıcı Adı</label>
+                        <input type="text" name="kullaniciAdi" class="form-control" value="@ViewBag.SelectedKullaniciAdi" placeholder="Kullanıcı adı girin" />
+                    </div>
+                    <!-- Filtreleme Butonu -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filtrele
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Hata Mesajı -->
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @ViewBag.ErrorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Log Tablosu -->
+            @if (ViewBag.logResponse != null && ViewBag.logResponse.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Tarih</th>
+                                <th scope="col">Level</th>
+                                <th scope="col">Kullanıcı Adı</th>
+                                <th scope="col">Mesaj</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int siraNo = 1;
+                            }
+                            @foreach (var item in ViewBag.logResponse)
+                            {
+                                <tr>
+                                    <th scope="row">@siraNo</th>
+                                    <td>@item.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+
+                                    <td>
+                                        <span class="badge @(item.Level == "Information" ? "bg-success" : item.Level == "Error" ? "bg-danger" : "bg-warning")">
+                                            @item.Level
+                                        </span>
+                                    </td>
+                                    <td>@item.KullaniciAdi</td>
+                                    <td>@item.HataMesaji</td>
+                                </tr>
+                                siraNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i> Seçilen filtreye ait log bulunamadı.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+@*
+<div class="container-fluid py-5">
+
+    <!-- Log Listesi -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Loglar</h3>
+        </div>
+        <div class="card-body">
+            <!-- Tarih Filtreleme ve Toplam Log Sayısı -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form asp-action="LogByDate" asp-controller="Settings" method="get" class="form-inline">
+                        <div class="input-group">
+                            <input type="date" name="date" class="form-control" value="@ViewBag.SelectedDate?.ToString("yyyy-MM-dd")" />
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary">Filtrele</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6 text-right">
+                    <div class="alert alert-info mb-0">
+                        Toplam Log Sayısı: @ViewBag.TotalLogs
+                    </div>
+                </div>
+            </div>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            @if (ViewBag.logResponse != null && ViewBag.logResponse.Count > 0)
+            {
+                <div class="container-fluid py-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="card-title mb-0">Loglar</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Toplam Log Sayısı -->
+                            <div class="alert alert-info mb-4">
+                                Toplam Log Sayısı: <span id="logCount">0</span>
+                            </div>
+
+                            <!-- Log Tablosu -->
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Sıra No</th>
+                                            <th>Level</th>
+                                            <th>Kullanıcı Adı</th>
+                                            <th>Mesaj</th>
+                                            <th>Tarih</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logTableBody">
+                                        <!-- Loglar buraya dinamik olarak eklenecek -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    Seçilen tarihe ait log bulunamadı.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(() => {
+        var connection = new signalR.HubConnectionBuilder().withUrl("/appHub").build();
+
+        // Bağlantı durumunu göster
+        $("#constatus").text(connection.state);
+
+        // Log güncellemelerini dinle
+        connection.on("ReceiveLogUpdate", (logs) => {
+            console.log("Yeni loglar geldi:", logs);
+
+            // Logları tabloya ekle
+            updateLogTable(logs);
+            updateLogCount(logs.length);
+        });
+
+        // Bağlantıyı başlat
+        connection.start().then(() => {
+            $("#constatus").text(connection.state);
+        }).catch((err) => {
+            console.log(err);
+        });
+
+        // Belirli aralıklarla log güncellemesi iste
+        setInterval(() => {
+            connection.invoke("SendLogUpdate");
+        }, 5000); // 5 saniyede bir güncelle
+    });
+
+    function updateLogTable(logs) {
+        // Tabloyu temizle
+        $('#logTableBody').empty();
+
+        // Yeni logları tabloya ekle
+        logs.forEach((log, index) => {
+            var formattedTimestamp = new Date(log.timeStamp).toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+
+            $('#logTableBody').append(`
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>
+                        <span class="badge ${log.level === "Information" ? "bg-success" : "bg-danger"}">
+                            ${log.level}
+                        </span>
+                    </td>
+                    <td>${log.kullaniciAdi}</td>
+                    <td>${log.hataMesaji}</td>
+                    <td>${formattedTimestamp}</td>
+                </tr>
+            `);
+        });
+    }
+
+    function updateLogCount(count) {
+        // Toplam log sayısını güncelle
+        $('#logCount').text(count);
+    }
+</script> *@

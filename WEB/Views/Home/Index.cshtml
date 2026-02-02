@@ -1,0 +1,1443 @@
+﻿@model WEB.Models.WTPartIntegrationIndexViewModel
+@{
+    ViewData["Title"] = "Entegrasyon Durumları";
+}
+
+<!-- Chart.js ve eklentileri -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid py-4">
+    <!-- Başlık ve Açıklama -->
+    <div class="card card-custom gutter-b shadow-sm mb-5">
+        <div class="card-body d-flex flex-column p-4">
+            <div class="text-center mb-2">
+                <h1 class="fs-2x fw-bolder text-dark mb-0">Entegrasyon Durumları</h1>
+                <span class="text-muted fs-6">Sistem entegrasyon durumlarının anlık görünümü</span>
+            </div>
+            <div class="d-flex justify-content-end">
+                <span class="badge badge-light-primary fs-7">
+                    <i class="fas fa-sync-alt me-1"></i> Son güncelleme: <span id="lastUpdateTime">@DateTime.Now.ToString("dd.MM.yyyy HH:mm")</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Özet İstatistikler -->
+    <div class="row g-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark ">
+                <i class="fas fa-chart-pie me-2 text-primary"></i>Genel Durum
+            </h2>
+        </div>
+
+        <!-- Toplam Entegrasyon Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-info shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-info">
+                                <i class="fas fa-exchange-alt fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Toplam Entegrasyon</div>
+                            <div class="fs-1 fw-boldest text-info d-flex align-items-center">
+                                <span id="totalIntegrationCount">0</span>
+                                <span class="trend-indicator ms-2" id="totalTrend">
+                                    <i class="fas fa-arrow-up text-success fs-3"></i>
+                                </span>
+                            </div>
+                            <div class="text-muted fs-7">Tüm entegrasyon işlemleri</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bekleyen İşlemler Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-warning shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-clock fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Bekleyen İşlemler</div>
+                            <div class="fs-1 fw-boldest text-warning d-flex align-items-center">
+                                <span id="pendingOperationsCount">0</span>
+                                <span class="trend-indicator ms-2" id="pendingTrend">
+                                    <i class="fas fa-minus text-warning fs-3"></i>
+                                </span>
+                            </div>
+                            <div class="text-muted fs-7">Gönderilmeyi bekleyen işlemler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Başarılı İşlemler Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-success shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-check-double fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Başarılı İşlemler</div>
+                            <div class="fs-1 fw-boldest text-success d-flex align-items-center">
+                                <span id="successfulOperationsCount">0</span>
+                                <span class="trend-indicator ms-2" id="successTrend">
+                                    <i class="fas fa-arrow-up text-success fs-3"></i>
+                                </span>
+                            </div>
+                            <div class="text-muted fs-7">Başarıyla tamamlanan işlemler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Görsel Analiz Bölümü -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark mb-4">
+                <i class="fas fa-chart-bar me-2 text-success"></i>Görsel Analiz
+            </h2>
+        </div>
+
+        <!-- Genel Durum Pasta Grafiği -->
+        <div class="col-xl-6">
+            <div class="card card-custom shadow-sm h-100">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>Genel Entegrasyon Dağılımı
+                    </h3>
+                    <div class="card-toolbar">
+                        <span class="badge badge-light-success" id="chartStatus1">
+                            <i class="fas fa-circle text-success me-1"></i>Canlı
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="generalStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WTPart Detay Grafiği -->
+        <div class="col-xl-6">
+            <div class="card card-custom shadow-sm h-100">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>WTPart İşlem Durumları
+                    </h3>
+                    <div class="card-toolbar">
+                        <span class="badge badge-light-success" id="chartStatus2">
+                            <i class="fas fa-circle text-success me-1"></i>Canlı
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="wtpartStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canlı Takip Grafiği -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <div class="card card-custom shadow-sm">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line me-2 text-warning"></i>Canlı İşlem Takibi
+                    </h3>
+                    <div class="card-toolbar">
+                        <span class="badge badge-light-success" id="chartStatus3">
+                            <i class="fas fa-circle text-success me-1"></i>Canlı
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="realTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WTPart Bölümü -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark mb-4">
+                <i class="fas fa-cogs me-2 text-primary"></i>WTPart Entegrasyonları
+            </h2>
+        </div>
+
+        <!-- Released Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-success shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-check-circle fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
+                            <span class="text-muted fs-7">Onaylanmış Parçalar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="releasedNotSentCount" class="badge badge-success fs-5 fw-bolder">@Model.ReleasedNotSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="releasedSentCount" class="badge badge-light-success fs-5 fw-bolder">@Model.ReleasedSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="releasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.ReleasedErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancelled Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-danger shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-danger">
+                                <i class="fas fa-ban fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
+                            <span class="text-muted fs-7">İptal Edilmiş Parçalar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="cancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">@Model.CancelledNotSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="cancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.CancelledSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="cancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.CancelledErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktif Muadil İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-primary shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-primary">
+                                <i class="fas fa-link fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Muadiller</h3>
+                            <span class="text-muted fs-7">Alternatif Parça İlişkileri</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="alternateLinkNotSentCount" class="badge badge-primary fs-5 fw-bolder">@Model.WtpartAlternateCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="alternateLinkSentCount" class="badge badge-light-primary fs-5 fw-bolder">@Model.WtpartAlternateSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="alternateLinkErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Silinen Muadil İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-warning shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-unlink fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Muadiller</h3>
+                            <span class="text-muted fs-7">Kaldırılmış Alternatif İlişkiler</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="alternateLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="alternateLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="alternateLinkRemovedErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateRemovedErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EPMDocument Bölümü -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark mb-4">
+                <i class="fas fa-file-alt me-2 text-info"></i>EPMDocument Entegrasyonları
+            </h2>
+        </div>
+
+        <!-- EPM Released Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-success shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-file-check fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
+                            <span class="text-muted fs-7">Onaylanmış Dokümanlar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="epmReleasedNotSentCount" class="badge badge-success fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="epmReleasedSentCount" class="badge badge-light-success fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="epmReleasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EPM Cancelled Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-danger shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-danger">
+                                <i class="fas fa-file-excel fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
+                            <span class="text-muted fs-7">İptal Edilmiş Dokümanlar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="epmCancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="epmCancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="epmCancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktif Eşdeğer İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-info shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-info">
+                                <i class="fas fa-equals fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Eşdeğerler</h3>
+                            <span class="text-muted fs-7">Eşdeğer Doküman İlişkileri</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="equivalenceLinkNotSentCount" class="badge badge-info fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="equivalenceLinkSentCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="equivalenceLinkTotalCount" class="badge badge-light-primary fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Silinen Eşdeğer İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-warning shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-not-equal fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Eşdeğerler</h3>
+                            <span class="text-muted fs-7">Kaldırılmış Eşdeğer İlişkiler</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="equivalenceLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="equivalenceLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="equivalenceLinkRemovedTotalCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- SignalR client kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+    <script>
+        // Chart değişkenleri
+        let generalChart;
+        let wtpartChart;
+        let realTimeChart;
+        let previousValues = {};
+        let isChartsInitialized = false;
+
+        // SignalR bağlantısını oluşturuyoruz
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/wTPartHub')
+            .build();
+
+        connection.start()
+            .then(() => {
+                console.log("SignalR bağlantısı başarılı!");
+                updateChartStatus('success');
+            })
+            .catch(err => {
+                console.error("SignalR bağlantı hatası: ", err);
+                updateChartStatus('error');
+            });
+
+        // Chart durumunu güncelle
+        function updateChartStatus(status) {
+            const statusElements = ['chartStatus1', 'chartStatus2', 'chartStatus3'];
+            statusElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (status === 'success') {
+                    element.innerHTML = '<i class="fas fa-circle text-success me-1"></i>Canlı';
+                    element.className = 'badge badge-light-success';
+                } else {
+                    element.innerHTML = '<i class="fas fa-circle text-danger me-1"></i>Bağlantı Hatası';
+                    element.className = 'badge badge-light-danger';
+                }
+            });
+        }
+
+        // Chart'ları başlatma fonksiyonu
+        function initializeCharts() {
+            try {
+                // 1. Genel Durum Pasta Grafiği
+                const generalCtx = document.getElementById('generalStatusChart').getContext('2d');
+                generalChart = new Chart(generalCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Bekleyen İşlemler', 'Başarılı İşlemler', 'Hatalı İşlemler'],
+                        datasets: [{
+                            data: [0, 0, 0],
+                            backgroundColor: [
+                                '#FFC700', // Sarı - Bekleyen
+                                '#50CD89', // Yeşil - Başarılı
+                                '#F1416C'  // Kırmızı - Hatalı
+                            ],
+                            borderWidth: 3,
+                            borderColor: '#ffffff',
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: {
+                                        size: 13,
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((context.parsed * 100) / total).toFixed(1) : 0;
+                                        return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+
+                // 2. WTPart Bar Grafiği
+                const wtpartCtx = document.getElementById('wtpartStatusChart').getContext('2d');
+                wtpartChart = new Chart(wtpartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Released', 'Cancelled', 'Aktif Muadil', 'Silinen Muadil'],
+                        datasets: [
+                            {
+                                label: 'Bekleyen',
+                                data: [0, 0, 0, 0],
+                                backgroundColor: '#FFC700',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Gönderilmiş',
+                                data: [0, 0, 0, 0],
+                                backgroundColor: '#50CD89',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Hatalı',
+                                data: [0, 0, 0, 0],
+                                backgroundColor: '#F1416C',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#E4E6EF'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 3. Canlı Takip Line Grafiği
+                const realTimeCtx = document.getElementById('realTimeChart').getContext('2d');
+                realTimeChart = new Chart(realTimeCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Toplam İşlem',
+                                data: [],
+                                borderColor: '#009EF7',
+                                backgroundColor: 'rgba(0, 158, 247, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Bekleyen İşlemler',
+                                data: [],
+                                borderColor: '#FFC700',
+                                backgroundColor: 'rgba(255, 199, 0, 0.1)',
+                                tension: 0.4,
+                                fill: false
+                            },
+                            {
+                                label: 'Hatalı İşlemler',
+                                data: [],
+                                borderColor: '#F1416C',
+                                backgroundColor: 'rgba(241, 65, 108, 0.1)',
+                                tension: 0.4,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#E4E6EF'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                isChartsInitialized = true;
+                console.log("Chart'lar başarıyla başlatıldı");
+
+                // İlk verileri yükle
+                updateSummaryNumbers();
+
+            } catch (error) {
+                console.error("Chart başlatma hatası:", error);
+            }
+        }
+
+        // Chart'ları güncelleme fonksiyonu
+        function updateCharts() {
+            if (!isChartsInitialized) {
+                console.log("Chart'lar henüz başlatılmadı");
+                return;
+            }
+
+            try {
+                // Değerleri al
+                const pending = parseInt(document.getElementById("pendingOperationsCount").textContent) || 0;
+                const successful = parseInt(document.getElementById("successfulOperationsCount").textContent) || 0;
+
+                // Hata sayılarını hesapla
+                const releasedError = parseInt(document.getElementById("releasedErrorCount").textContent) || 0;
+                const cancelledError = parseInt(document.getElementById("cancelledErrorCount").textContent) || 0;
+                const alternateError = parseInt(document.getElementById("alternateLinkErrorCount").textContent) || 0;
+                const alternateRemovedError = parseInt(document.getElementById("alternateLinkRemovedErrorCount").textContent) || 0;
+                const totalErrors = releasedError + cancelledError + alternateError + alternateRemovedError;
+
+                console.log("Chart verileri:", { pending, successful, totalErrors });
+
+                // 1. Genel Durum Pasta Grafiği Güncelle
+                if (generalChart) {
+                    generalChart.data.datasets[0].data = [pending, successful, totalErrors];
+                    generalChart.update('active');
+                }
+
+                // 2. WTPart Bar Grafiği Güncelle
+                if (wtpartChart) {
+                    const releasedPending = parseInt(document.getElementById("releasedNotSentCount").textContent) || 0;
+                    const releasedSent = parseInt(document.getElementById("releasedSentCount").textContent) || 0;
+                    const cancelledPending = parseInt(document.getElementById("cancelledNotSentCount").textContent) || 0;
+                    const cancelledSent = parseInt(document.getElementById("cancelledSentCount").textContent) || 0;
+                    const alternatePending = parseInt(document.getElementById("alternateLinkNotSentCount").textContent) || 0;
+                    const alternateSent = parseInt(document.getElementById("alternateLinkSentCount").textContent) || 0;
+                    const alternateRemovedPending = parseInt(document.getElementById("alternateLinkRemovedNotSentCount").textContent) || 0;
+                    const alternateRemovedSent = parseInt(document.getElementById("alternateLinkRemovedSentCount").textContent) || 0;
+
+                    wtpartChart.data.datasets[0].data = [releasedPending, cancelledPending, alternatePending, alternateRemovedPending];
+                    wtpartChart.data.datasets[1].data = [releasedSent, cancelledSent, alternateSent, alternateRemovedSent];
+                    wtpartChart.data.datasets[2].data = [releasedError, cancelledError, alternateError, alternateRemovedError];
+                    wtpartChart.update('active');
+                }
+
+                // 3. Canlı Takip Grafiği Güncelle
+                if (realTimeChart) {
+                    const now = new Date().toLocaleTimeString();
+                    const total = successful + pending + totalErrors;
+
+                    realTimeChart.data.labels.push(now);
+                    realTimeChart.data.datasets[0].data.push(total);
+                    realTimeChart.data.datasets[1].data.push(pending);
+                    realTimeChart.data.datasets[2].data.push(totalErrors);
+
+                    // Son 20 veriyi tut
+                    if (realTimeChart.data.labels.length > 20) {
+                        realTimeChart.data.labels.shift();
+                        realTimeChart.data.datasets[0].data.shift();
+                        realTimeChart.data.datasets[1].data.shift();
+                        realTimeChart.data.datasets[2].data.shift();
+                    }
+                    realTimeChart.update('active');
+                }
+
+            } catch (error) {
+                console.error("Chart güncelleme hatası:", error);
+            }
+        }
+
+        // Animasyonlu sayaç fonksiyonu
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const startValue = parseInt(element.textContent) || 0;
+            const duration = 1000;
+            const startTime = performance.now();
+
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const currentValue = Math.floor(startValue + (targetValue - startValue) * progress);
+
+                element.textContent = currentValue;
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                }
+            }
+
+            requestAnimationFrame(updateCounter);
+        }
+
+        // Trend göstergesi güncelleme
+        function updateTrendIndicator(elementId, currentValue, previousValue) {
+            const trendElement = document.getElementById(elementId);
+            if (!trendElement) return;
+
+            const icon = trendElement.querySelector('i');
+            if (currentValue > previousValue) {
+                icon.className = 'fas fa-arrow-up text-success fs-3';
+            } else if (currentValue < previousValue) {
+                icon.className = 'fas fa-arrow-down text-danger fs-3';
+            } else {
+                icon.className = 'fas fa-minus text-warning fs-3';
+            }
+        }
+
+        // Genel durum sayılarını güncelleme fonksiyonu
+        function updateSummaryNumbers() {
+            try {
+                // Toplam entegrasyon sayısı
+                const releasedSent = parseInt(document.getElementById("releasedSentCount").textContent) || 0;
+                const cancelledSent = parseInt(document.getElementById("cancelledSentCount").textContent) || 0;
+                const alternateLinkSent = parseInt(document.getElementById("alternateLinkSentCount").textContent) || 0;
+                const alternateLinkRemovedSent = parseInt(document.getElementById("alternateLinkRemovedSentCount").textContent) || 0;
+                const epmReleasedSent = parseInt(document.getElementById("epmReleasedSentCount").textContent) || 0;
+                const epmCancelledSent = parseInt(document.getElementById("epmCancelledSentCount").textContent) || 0;
+                const equivalenceLinkSent = parseInt(document.getElementById("equivalenceLinkSentCount").textContent) || 0;
+                const equivalenceLinkRemovedSent = parseInt(document.getElementById("equivalenceLinkRemovedSentCount").textContent) || 0;
+
+                const totalIntegration = releasedSent + cancelledSent + alternateLinkSent + alternateLinkRemovedSent +
+                                        epmReleasedSent + epmCancelledSent + equivalenceLinkSent + equivalenceLinkRemovedSent;
+
+                // Bekleyen işlemler
+                const releasedNotSent = parseInt(document.getElementById("releasedNotSentCount").textContent) || 0;
+                const cancelledNotSent = parseInt(document.getElementById("cancelledNotSentCount").textContent) || 0;
+                const alternateLinkNotSent = parseInt(document.getElementById("alternateLinkNotSentCount").textContent) || 0;
+                const alternateLinkRemovedNotSent = parseInt(document.getElementById("alternateLinkRemovedNotSentCount").textContent) || 0;
+                const epmReleasedNotSent = parseInt(document.getElementById("epmReleasedNotSentCount").textContent) || 0;
+                const epmCancelledNotSent = parseInt(document.getElementById("epmCancelledNotSentCount").textContent) || 0;
+                const equivalenceLinkNotSent = parseInt(document.getElementById("equivalenceLinkNotSentCount").textContent) || 0;
+                const equivalenceLinkRemovedNotSent = parseInt(document.getElementById("equivalenceLinkRemovedNotSentCount").textContent) || 0;
+
+                const pendingOperations = releasedNotSent + cancelledNotSent + alternateLinkNotSent + alternateLinkRemovedNotSent +
+                                         epmReleasedNotSent + epmCancelledNotSent + equivalenceLinkNotSent + equivalenceLinkRemovedNotSent;
+
+                console.log("Özet sayılar:", { totalIntegration, pendingOperations });
+
+                // Trend göstergelerini güncelle
+                updateTrendIndicator('totalTrend', totalIntegration, previousValues.totalIntegration || 0);
+                updateTrendIndicator('pendingTrend', pendingOperations, previousValues.pendingOperations || 0);
+                updateTrendIndicator('successTrend', totalIntegration, previousValues.totalIntegration || 0);
+
+                // Animasyonlu güncelleme
+                animateCounter("totalIntegrationCount", totalIntegration);
+                animateCounter("pendingOperationsCount", pendingOperations);
+                animateCounter("successfulOperationsCount", totalIntegration);
+
+                // Önceki değerleri sakla
+                previousValues = {
+                    totalIntegration: totalIntegration,
+                    pendingOperations: pendingOperations
+                };
+
+                // Chart'ları güncelle
+                updateCharts();
+
+                // Son güncelleme zamanını güncelle
+                document.getElementById("lastUpdateTime").textContent = new Date().toLocaleString('tr-TR');
+
+            } catch (error) {
+                console.error("Özet sayılar güncelleme hatası:", error);
+            }
+        }
+
+        // WTPart güncellemelerini dinliyoruz
+        connection.on("ReceiveWTPartUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
+            console.log("WTPart güncelleme alındı:", { releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount });
+
+            document.getElementById("releasedNotSentCount").textContent = releasedNotSentCount;
+            document.getElementById("releasedSentCount").textContent = releasedSentCount;
+            document.getElementById("cancelledNotSentCount").textContent = cancelledNotSentCount;
+            document.getElementById("cancelledSentCount").textContent = cancelledSentCount;
+            document.getElementById("releasedErrorCount").textContent = releasedErrorCount ?? 0;
+            document.getElementById("cancelledErrorCount").textContent = cancelledErrorCount ?? 0;
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // AlternateLink güncellemelerini dinliyoruz
+        connection.on("ReceiveAlternateLinkUpdates", (notSentCount, sentCount, removedNotSentCount, removedSentCount, errorCount, removedErrorCount) => {
+            console.log("AlternateLink güncelleme alındı:", { notSentCount, sentCount, removedNotSentCount, removedSentCount, errorCount, removedErrorCount });
+
+            document.getElementById("alternateLinkNotSentCount").textContent = notSentCount;
+            document.getElementById("alternateLinkSentCount").textContent = sentCount;
+            document.getElementById("alternateLinkErrorCount").textContent = errorCount;
+            document.getElementById("alternateLinkRemovedNotSentCount").textContent = removedNotSentCount;
+            document.getElementById("alternateLinkRemovedSentCount").textContent = removedSentCount;
+            document.getElementById("alternateLinkRemovedErrorCount").textContent = removedErrorCount;
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // EPMDocument güncellemelerini dinliyoruz
+        connection.on("ReceiveEPMDocumentUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
+            document.getElementById("epmReleasedNotSentCount").textContent = releasedNotSentCount;
+            document.getElementById("epmReleasedSentCount").textContent = releasedSentCount;
+            document.getElementById("epmCancelledNotSentCount").textContent = cancelledNotSentCount;
+            document.getElementById("epmCancelledSentCount").textContent = cancelledSentCount;
+            document.getElementById("epmReleasedErrorCount").textContent = releasedErrorCount ?? 0;
+            document.getElementById("epmCancelledErrorCount").textContent = cancelledErrorCount ?? 0;
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // EquivalenceLink güncellemelerini dinliyoruz
+        connection.on("ReceiveEquivalenceLinkUpdates", (notSentCount, sentCount, totalCount, removedNotSentCount, removedSentCount, removedTotalCount) => {
+            document.getElementById("equivalenceLinkNotSentCount").textContent = notSentCount;
+            document.getElementById("equivalenceLinkSentCount").textContent = sentCount;
+            document.getElementById("equivalenceLinkTotalCount").textContent = totalCount;
+            document.getElementById("equivalenceLinkRemovedNotSentCount").textContent = removedNotSentCount;
+            document.getElementById("equivalenceLinkRemovedSentCount").textContent = removedSentCount;
+            document.getElementById("equivalenceLinkRemovedTotalCount").textContent = removedTotalCount;
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // Otomatik güncelleme: Her 5 saniyede bir /Home/PushIntegrationSummary tetikleniyor.
+        setInterval(() => {
+            fetch('/Home/PushIntegrationSummary', { method: 'POST' })
+                .then(response => response.text())
+                .then(result => {
+                    console.log("Otomatik güncelleme:", result);
+                    updateChartStatus('success');
+                })
+                .catch(err => {
+                    console.error("Otomatik güncelleme hatası:", err);
+                    updateChartStatus('error');
+                });
+        }, 5000);
+
+        // Sayfa yüklendiğinde chart'ları başlat
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Sayfa yüklendi, chart'lar başlatılıyor...");
+            setTimeout(() => {
+                initializeCharts();
+            }, 1000); // 1 saniye bekle
+        });
+    </script>
+}
+
+
+@* @model WEB.Models.WTPartIntegrationIndexViewModel
+@{
+    ViewData["Title"] = "Entegrasyon Durumları";
+}
+
+<div class="container-fluid py-4">
+    <!-- Başlık ve Açıklama -->
+    <div class="card card-custom gutter-b shadow-sm mb-5">
+        <div class="card-body d-flex flex-column p-4">
+            <div class="text-center mb-2">
+                <h1 class="fs-2x fw-bolder text-dark mb-0">Entegrasyon Durumları</h1>
+                <span class="text-muted fs-6">Sistem entegrasyon durumlarının anlık görünümü</span>
+            </div>
+            <div class="d-flex justify-content-end">
+                <span class="badge badge-light-primary fs-7">
+                    <i class="fas fa-sync-alt me-1"></i> Son güncelleme: 29.04.2025 10:15
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Özet İstatistikler -->
+    <div class="row g-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark ">
+                <i class="fas fa-chart-pie me-2 text-primary"></i>Genel Durum
+            </h2>
+        </div>
+
+        <!-- Toplam Entegrasyon Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-info shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-info">
+                                <i class="fas fa-exchange-alt fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Toplam Entegrasyon</div>
+                            <div class="fs-1 fw-boldest text-info">
+                                <span id="totalIntegrationCount">0</span>
+                            </div>
+                            <div class="text-muted fs-7">Tüm entegrasyon işlemleri</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bekleyen İşlemler Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-warning shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-clock fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Bekleyen İşlemler</div>
+                            <div class="fs-1 fw-boldest text-warning">
+                                <span id="pendingOperationsCount">0</span>
+                            </div>
+                            <div class="text-muted fs-7">Gönderilmeyi bekleyen işlemler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Başarılı İşlemler Kartı -->
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-custom bg-light-success shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-4">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-check-double fs-1 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fs-4 text-dark fw-bolder">Başarılı İşlemler</div>
+                            <div class="fs-1 fw-boldest text-success">
+                                <span id="successfulOperationsCount">0</span>
+                            </div>
+                            <div class="text-muted fs-7">Başarıyla tamamlanan işlemler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- WTPart Bölümü -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark mb-4">
+                <i class="fas fa-cogs me-2 text-primary"></i>WTPart Entegrasyonları
+            </h2>
+        </div>
+
+        <!-- Released Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-success shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-check-circle fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
+                            <span class="text-muted fs-7">Onaylanmış Parçalar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="releasedNotSentCount" class="badge badge-success fs-5 fw-bolder">@Model.ReleasedNotSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="releasedSentCount" class="badge badge-light-success fs-5 fw-bolder">@Model.ReleasedSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="releasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.ReleasedErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancelled Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-danger shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-danger">
+                                <i class="fas fa-ban fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
+                            <span class="text-muted fs-7">İptal Edilmiş Parçalar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="cancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">@Model.CancelledNotSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="cancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.CancelledSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="cancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.CancelledErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktif Muadil İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-primary shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-primary">
+                                <i class="fas fa-link fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Muadiller</h3>
+                            <span class="text-muted fs-7">Alternatif Parça İlişkileri</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="alternateLinkNotSentCount" class="badge badge-primary fs-5 fw-bolder">@Model.WtpartAlternateCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="alternateLinkSentCount" class="badge badge-light-primary fs-5 fw-bolder">@Model.WtpartAlternateSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="alternateLinkErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Silinen Muadil İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-warning shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-unlink fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Muadiller</h3>
+                            <span class="text-muted fs-7">Kaldırılmış Alternatif İlişkiler</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="alternateLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="alternateLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedSentCount</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="alternateLinkRemovedErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateRemovedErrorCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EPMDocument Bölümü -->
+    <div class="row g-5 mt-5">
+        <div class="col-12">
+            <h2 class="fs-1 fw-bold text-dark mb-4">
+                <i class="fas fa-file-alt me-2 text-info"></i>EPMDocument Entegrasyonları
+            </h2>
+        </div>
+
+        <!-- EPM Released Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-success shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-success">
+                                <i class="fas fa-file-check fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
+                            <span class="text-muted fs-7">Onaylanmış Dokümanlar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="epmReleasedNotSentCount" class="badge badge-success fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="epmReleasedSentCount" class="badge badge-light-success fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="epmReleasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EPM Cancelled Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-danger shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-danger">
+                                <i class="fas fa-file-excel fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
+                            <span class="text-muted fs-7">İptal Edilmiş Dokümanlar</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="epmCancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="epmCancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="epmCancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktif Eşdeğer İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-info shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-info">
+                                <i class="fas fa-equals fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Eşdeğerler</h3>
+                            <span class="text-muted fs-7">Eşdeğer Doküman İlişkileri</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="equivalenceLinkNotSentCount" class="badge badge-info fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="equivalenceLinkSentCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="equivalenceLinkTotalCount" class="badge badge-light-primary fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Silinen Eşdeğer İlişkileri Kartı -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card card-custom bg-light-warning shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="symbol symbol-40px me-3">
+                            <div class="symbol-label bg-warning">
+                                <i class="fas fa-not-equal fs-2 text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Eşdeğerler</h3>
+                            <span class="text-muted fs-7">Kaldırılmış Eşdeğer İlişkiler</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
+                            <span id="equivalenceLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
+                            <span id="equivalenceLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
+                            <span id="equivalenceLinkRemovedTotalCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+@section Scripts {
+    <!-- SignalR client kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js" integrity="sha512-..." crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" integrity="sha512-..." crossorigin="anonymous"></script>
+    <script>
+        // SignalR bağlantısını oluşturuyoruz
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/wTPartHub')
+            .build();
+
+        connection.start()
+            .then(() => console.log("SignalR bağlantısı başarılı!"))
+            .catch(err => console.error("SignalR bağlantı hatası: ", err));
+
+        // WTPart güncellemelerini dinliyoruz
+        connection.on("ReceiveWTPartUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
+            document.getElementById("releasedNotSentCount").textContent = releasedNotSentCount;
+            document.getElementById("releasedSentCount").textContent = releasedSentCount;
+            document.getElementById("cancelledNotSentCount").textContent = cancelledNotSentCount;
+            document.getElementById("cancelledSentCount").textContent = cancelledSentCount;
+            document.getElementById("releasedErrorCount").textContent = releasedErrorCount ?? "-";
+            document.getElementById("cancelledErrorCount").textContent = cancelledErrorCount ?? "-";
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+    
+                // AlternateLink güncellemelerini dinliyoruz
+        connection.on("ReceiveAlternateLinkUpdates", (notSentCount, sentCount, removedNotSentCount, removedSentCount, errorCount, removedErrorCount) => {
+            document.getElementById("alternateLinkNotSentCount").textContent = notSentCount;
+            document.getElementById("alternateLinkSentCount").textContent = sentCount;
+            document.getElementById("alternateLinkErrorCount").textContent = errorCount; // Hata sayısını burada kullanıyoruz
+            document.getElementById("alternateLinkRemovedNotSentCount").textContent = removedNotSentCount;
+            document.getElementById("alternateLinkRemovedSentCount").textContent = removedSentCount;
+            document.getElementById("alternateLinkRemovedErrorCount").textContent = removedErrorCount; // Removed hata sayısını burada kullanıyoruz
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // EPMDocument güncellemelerini dinliyoruz
+        connection.on("ReceiveEPMDocumentUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
+            document.getElementById("epmReleasedNotSentCount").textContent = releasedNotSentCount;
+            document.getElementById("epmReleasedSentCount").textContent = releasedSentCount;
+            document.getElementById("epmCancelledNotSentCount").textContent = cancelledNotSentCount;
+            document.getElementById("epmCancelledSentCount").textContent = cancelledSentCount;
+            document.getElementById("epmReleasedErrorCount").textContent = releasedErrorCount ?? "-";
+            document.getElementById("epmCancelledErrorCount").textContent = cancelledErrorCount ?? "-";
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // EquivalenceLink güncellemelerini dinliyoruz
+        connection.on("ReceiveEquivalenceLinkUpdates", (notSentCount, sentCount, totalCount, removedNotSentCount, removedSentCount, removedTotalCount) => {
+            document.getElementById("equivalenceLinkNotSentCount").textContent = notSentCount;
+            document.getElementById("equivalenceLinkSentCount").textContent = sentCount;
+            document.getElementById("equivalenceLinkTotalCount").textContent = totalCount;
+            document.getElementById("equivalenceLinkRemovedNotSentCount").textContent = removedNotSentCount;
+            document.getElementById("equivalenceLinkRemovedSentCount").textContent = removedSentCount;
+            document.getElementById("equivalenceLinkRemovedTotalCount").textContent = removedTotalCount;
+
+            // Genel durum sayılarını güncelle
+            updateSummaryNumbers();
+        });
+
+        // Otomatik güncelleme: Her 1 saniyede bir /Home/PushIntegrationSummary tetikleniyor.
+        setInterval(() => {
+            fetch('/Home/PushIntegrationSummary', { method: 'POST' })
+                .then(response => response.text())
+                .then(result => console.log("Otomatik güncelleme:", result))
+                .catch(err => console.error(err));
+        }, 5000); // 5 saniyeye çıkarıldı // Sistem performansından dolayı 1 den 5 saniyeye çıkarttım çünkü sql ve apiye istek atıyoruz 1 saniye süre problem yaratabilir duruma göre tekrar 1 e çekilebilir
+       
+        // Genel durum sayılarını güncelleme fonksiyonu
+        function updateSummaryNumbers() {
+            // Toplam entegrasyon sayısı
+            const releasedSent = parseInt(document.getElementById("releasedSentCount").textContent) || 0;
+            const cancelledSent = parseInt(document.getElementById("cancelledSentCount").textContent) || 0;
+            const alternateLinkSent = parseInt(document.getElementById("alternateLinkSentCount").textContent) || 0;
+            const alternateLinkRemovedSent = parseInt(document.getElementById("alternateLinkRemovedSentCount").textContent) || 0;
+            const epmReleasedSent = parseInt(document.getElementById("epmReleasedSentCount").textContent) || 0;
+            const epmCancelledSent = parseInt(document.getElementById("epmCancelledSentCount").textContent) || 0;
+            const equivalenceLinkSent = parseInt(document.getElementById("equivalenceLinkSentCount").textContent) || 0;
+            const equivalenceLinkRemovedSent = parseInt(document.getElementById("equivalenceLinkRemovedSentCount").textContent) || 0;
+
+            const totalIntegration = releasedSent + cancelledSent + alternateLinkSent + alternateLinkRemovedSent +
+                                    epmReleasedSent + epmCancelledSent + equivalenceLinkSent + equivalenceLinkRemovedSent;
+            document.getElementById("totalIntegrationCount").textContent = totalIntegration;
+
+            // Bekleyen işlemler
+            const releasedNotSent = parseInt(document.getElementById("releasedNotSentCount").textContent) || 0;
+            const cancelledNotSent = parseInt(document.getElementById("cancelledNotSentCount").textContent) || 0;
+            const alternateLinkNotSent = parseInt(document.getElementById("alternateLinkNotSentCount").textContent) || 0;
+            const alternateLinkRemovedNotSent = parseInt(document.getElementById("alternateLinkRemovedNotSentCount").textContent) || 0;
+            const epmReleasedNotSent = parseInt(document.getElementById("epmReleasedNotSentCount").textContent) || 0;
+            const epmCancelledNotSent = parseInt(document.getElementById("epmCancelledNotSentCount").textContent) || 0;
+            const equivalenceLinkNotSent = parseInt(document.getElementById("equivalenceLinkNotSentCount").textContent) || 0;
+            const equivalenceLinkRemovedNotSent = parseInt(document.getElementById("equivalenceLinkRemovedNotSentCount").textContent) || 0;
+
+            const pendingOperations = releasedNotSent + cancelledNotSent + alternateLinkNotSent + alternateLinkRemovedNotSent +
+                                     epmReleasedNotSent + epmCancelledNotSent + equivalenceLinkNotSent + equivalenceLinkRemovedNotSent;
+            document.getElementById("pendingOperationsCount").textContent = pendingOperations;
+
+            // Başarılı işlemler
+            document.getElementById("successfulOperationsCount").textContent = totalIntegration;
+        }
+
+        // Sayfa yüklendiğinde özet sayıları güncelle
+        document.addEventListener("DOMContentLoaded", function() {
+            updateSummaryNumbers();
+        });
+    </script>
+} *@

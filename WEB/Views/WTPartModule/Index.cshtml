@@ -1,0 +1,320 @@
+﻿@model WEB.Models.WTPartIntegrationIndexViewModel
+@{
+    ViewData["Title"] = "WTPart Entegrasyon Durumları";
+}
+<div class="container py-4">
+    <h1 class="mb-4 text-center">WTPart Entegrasyon Durumları</h1>
+    <div class="row justify-content-center">
+        <!-- WTPart Released Kartı -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h5 class="card-title mb-0">WTPart Released</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="mb-2 fs-5">
+                        <strong>Gönderilmemiş:</strong>
+                        <span id="releasedNotSentCount">@Model.ReleasedNotSentCount</span> görev
+                    </p>
+                    <p class="mb-0 fs-5">
+                        <strong>Gönderilen:</strong>
+                        <span id="releasedSentCount">@Model.ReleasedSentCount</span> görev
+                    </p>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <small class="text-muted">Veriler canlı güncelleniyor</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- WTPart Cancelled Kartı -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white text-center py-3">
+                    <h5 class="card-title mb-0">WTPart Cancelled</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="mb-2 fs-5">
+                        <strong>Gönderilmemiş:</strong>
+                        <span id="cancelledNotSentCount">@Model.CancelledNotSentCount</span> görev
+                    </p>
+                    <p class="mb-0 fs-5">
+                        <strong>Gönderilen:</strong>
+                        <span id="cancelledSentCount">@Model.CancelledSentCount</span> görev
+                    </p>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <small class="text-muted">Veriler canlı güncelleniyor</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test amaçlı push bildirimi tetiklemek için bir buton -->
+    <div class="text-center">
+        <button id="pushUpdateBtn" class="btn btn-primary">Push Güncelleme Gönder</button>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- SignalR istemci kütüphanesini dahil edin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script>
+        // SignalR bağlantısını oluşturuyoruz
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/wTPartHub")
+            .build();
+
+        connection.start()
+            .then(() => {
+                console.log("SignalR bağlantısı başarılı.");
+            })
+            .catch(err => console.error("SignalR bağlantı hatası: ", err));
+
+        // Sunucudan gelen güncelleme mesajını dinliyoruz
+        connection.on("ReceiveWTPartUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount) => {
+            console.log("Güncelleme alındı:", releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount);
+            document.getElementById("releasedNotSentCount").textContent = releasedNotSentCount;
+            document.getElementById("releasedSentCount").textContent = releasedSentCount;
+            document.getElementById("cancelledNotSentCount").textContent = cancelledNotSentCount;
+            document.getElementById("cancelledSentCount").textContent = cancelledSentCount;
+        });
+
+        // Test için: Push bildirimi tetikleyen butona tıklayınca, PushIntegrationSummary endpoint'ini çağırıyoruz.
+        document.getElementById("pushUpdateBtn").addEventListener("click", () => {
+            fetch('/WTPart/PushIntegrationSummary', { method: 'POST' })
+                .then(response => response.text())
+                .then(result => console.log(result))
+                .catch(err => console.error(err));
+        });
+    </script>
+}
+
+
+
+<!-- SignalR Hub Mapping (Startup/Program.cs kısmında zaten tanımlı olacak) -->
+
+
+
+@*@model List<WEB.Models.WTPartViewModel>
+@{
+    ViewData["Title"] = "WTPart Module - DataTables ile Canlı Veri";
+}
+<link href="assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+<!-- Eğer moment.js yüklü değilse -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" integrity="sha512-Ck/oVBY6w2KuKpNtb4/v2hpPzyguoTvKPuFJfhV1N2EtRacIWq3DqwDg0dgnYzeyYBqEkfH8xXbLEAXgIrvumw==" crossorigin="anonymous"></script>
+
+<div class="card card-p-3 card-flush">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <div class="card-title">
+            <!--begin::Search-->
+            <div class="d-flex align-items-center position-relative my-1">
+                <span class="svg-icon fs-1 position-absolute ms-4">
+                    <!-- SVG icon içeriği (örneğin, arama ikonu) -->
+                    ...
+                </span>
+                <input type="text" data-kt-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Rapor Ara" />
+            </div>
+            <!--end::Search-->
+            <!--begin::Export buttons-->
+            <div id="kt_datatable_example_1_export" class="d-none"></div>
+            <!--end::Export buttons-->
+        </div>
+        <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
+            <!--begin::Export dropdown-->
+            <button type="button" class="btn btn-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                <i class="ki-duotone ki-exit-down fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                </i>
+                Rapor Dışa Aktar
+            </button>
+            <!--begin::Menu-->
+            <div id="kt_datatable_example_export_menu" class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
+                <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3" data-kt-export="copy">Panoya Kopyala</a>
+                </div>
+                <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3" data-kt-export="excel">Excel Olarak İndir</a>
+                </div>
+                <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3" data-kt-export="csv">CSV Olarak İndir</a>
+                </div>
+                <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3" data-kt-export="pdf">PDF Olarak İndir</a>
+                </div>
+            </div>
+            <!--end::Menu-->
+            <!--begin::Hide default export buttons-->
+            <div id="kt_datatable_example_buttons" class="d-none"></div>
+            <!--end::Hide default export buttons-->
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table align-middle border rounded table-row-dashed fs-6 g-5" id="kt_datatable_example">
+            <thead>
+                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase">
+                    <th class="min-w-50px">Sıra No</th>
+                    <th class="min-w-100px">Parça State</th>
+                    <th class="min-w-100px">Parça PartID</th>
+                    <th class="min-w-100px">Parça PartMasterID</th>
+                    <th class="min-w-150px">Parça Name</th>
+                    <th class="min-w-120px">Parça Number</th>
+                    <th class="min-w-100px">Parça Version</th>
+                    <th class="min-w-100px">Kul Ad</th>
+                    <th class="min-w-150px">Log Date</th>
+                    <th class="min-w-100px">Entegrasyon Durum</th>
+                    <th class="min-w-150px">Log Mesaj</th>
+                    <th class="min-w-100px">Action Type</th>
+                    <th class="min-w-150px">Action Date</th>
+                </tr>
+            </thead>
+            <tbody class="fw-semibold text-gray-600">
+                <!-- DataTables AJAX ile doldurulacak -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- SignalR kütüphanesini ekleyin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.4/signalr.min.js"></script>
+<script>
+    "use strict";
+
+    var KTDatatablesExample = function () {
+        var table;
+        var datatable;
+
+        var initDatatable = function () {
+            datatable = $(table).DataTable({
+                ajax: {
+                    url: '@Url.Action("RefreshData", "WTPartModule")',
+                    dataSrc: '' // JSON veriniz doğrudan dizi döndürüyorsa
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row, meta) {
+                            return meta.row + 1;
+                        },
+                        width: "50px"
+                    },
+                    { data: 'parcaState', width: "100px" },
+                    { data: 'parcaPartID', width: "100px" },
+                    { data: 'parcaPartMasterID', width: "100px" },
+                    { data: 'parcaName', width: "150px" },
+                    { data: 'parcaNumber', width: "120px" },
+                    { data: 'parcaVersion', width: "100px" },
+                    { data: 'kulAd', width: "100px" },
+                    {
+                        data: 'logDate',
+                        render: function (data) {
+                            return new Date(data).toLocaleString();
+                        },
+                        width: "150px"
+                    },
+                    { data: 'entegrasyonDurum', width: "100px" },
+                    { data: 'logMesaj', width: "150px" },
+                    { data: 'actionType', width: "100px" },
+                    {
+                        data: 'actionDate',
+                        render: function (data) {
+                            return new Date(data).toLocaleString();
+                        },
+                        width: "150px"
+                    }
+                ],
+                order: [[8, "desc"]], // Log Date sütunu desc sıralama
+                pageLength: 10,
+                responsive: true,
+                language: {
+                    search: "Ara:",
+                    paginate: {
+                        previous: "Önceki",
+                        next: "Sonraki"
+                    },
+                    zeroRecords: "Tabloda gösterilecek veri bulunamadı.",
+                    info: "Toplam _TOTAL_ kayıt içerisinden _START_ - _END_ arası gösteriliyor.",
+                    infoEmpty: "Kayıt bulunamadı.",
+                    infoFiltered: "(toplam _MAX_ kayıt içerisinden filtrelenen)",
+                    lengthMenu: "Sayfa başına _MENU_ kayıt göster"
+                }
+            });
+        };
+
+        var exportButtons = function () {
+            var documentTitle = 'WTPart Verileri';
+            var buttons = new $.fn.dataTable.Buttons(table, {
+                buttons: [
+                    { extend: 'copyHtml5', title: documentTitle, text: 'Panoya Kopyala' },
+                    { extend: 'excelHtml5', title: documentTitle, text: 'Excel Olarak İndir' },
+                    { extend: 'csvHtml5', title: documentTitle, text: 'CSV Olarak İndir' },
+                    { extend: 'pdfHtml5', title: documentTitle, text: 'PDF Olarak İndir', customize: function (doc) {
+                            doc.defaultStyle.fontSize = 8;
+                            doc.pageOrientation = 'landscape';
+                        }
+                    }
+                ]
+            }).container().appendTo($('#kt_datatable_example_buttons'));
+
+            var exportBtns = document.querySelectorAll('#kt_datatable_example_export_menu [data-kt-export]');
+            exportBtns.forEach(function (exportBtn) {
+                exportBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var exportValue = e.target.getAttribute('data-kt-export');
+                    var target = document.querySelector('.dt-buttons .buttons-' + exportValue);
+                    target.click();
+                });
+            });
+        };
+
+        var handleSearchDatatable = function () {
+            var filterSearch = document.querySelector('[data-kt-filter="search"]');
+            filterSearch.addEventListener('keyup', function (e) {
+                datatable.search(e.target.value).draw();
+            });
+        };
+
+        return {
+            init: function () {
+                table = document.querySelector('#kt_datatable_example');
+                if (!table) return;
+                initDatatable();
+                exportButtons();
+                handleSearchDatatable();
+            },
+            // Public method to refresh data via DataTables API
+            refresh: function () {
+                datatable.ajax.reload(null, false);
+            }
+        };
+    }();
+
+    $(document).ready(function () {
+        KTDatatablesExample.init();
+
+        // SignalR entegrasyonu: SignalR ile canlı güncelleme
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/wthub")
+            .build();
+
+        connection.on("ReceiveWTPartUpdate", function () {
+            // SignalR sinyali alındığında DataTables verilerini yenile
+            KTDatatablesExample.refresh();
+        });
+
+        connection.start().catch(function (err) {
+            console.error("SignalR bağlantı hatası: " + err.toString());
+        });
+
+        // İsteğe bağlı: Belirli aralıklarla (örneğin her 10 saniyede) server'a update isteği gönder
+        setInterval(function () {
+            connection.invoke("RequestUpdate").catch(function (err) {
+                console.error("RequestUpdate hatası: " + err.toString());
+            });
+        }, 10000);
+    });
+</script>
+ *@

@@ -1,0 +1,268 @@
+﻿{
+  "Tables": [
+    {
+      "TableTitle": "Login",
+      "TableName": "Des2_Users",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_Users (Id INT PRIMARY KEY IDENTITY, UserId NVARCHAR(MAX), Email NVARCHAR(MAX), FullName NVARCHAR(MAX), PasswordSalt VARBINARY(MAX), PasswordHash VARBINARY(MAX), AuthenticatorType NVARCHAR(50),Role INT, CreatedDate DATETIME, UpdatedDate DATETIME, DeletedDate DATETIME)",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Module Settings",
+      "TableName": "Des2_Module_Settings",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_Module_Settings ( [ModuleSettingsID] INT IDENTITY(1,1) PRIMARY KEY, [SettingsName] NVARCHAR(100) NOT NULL, [SettingsValue] TINYINT NOT NULL ); INSERT INTO {schema}.Des2_Module_Settings ([SettingsName], [SettingsValue])VALUES ('IntegrationModule', 1);",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Process Tags",
+      "TableName": "Des2_RolProcessTags",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_RolProcessTags ( [ProcessTagID] INT IDENTITY(1,1) PRIMARY KEY, [TagName] NVARCHAR(100) NOT NULL UNIQUE ); INSERT INTO {schema}.Des2_RolProcessTags (TagName) VALUES ('WTPART_RELEASED'), ('WTPART_CANCELLED'), ('EPMDocument_RELEASED'), ('EPMDocument_CANCELLED'),('WTPART_ALTERNATE'),('WTPART_ALTERNATE_REMOVED');",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Role Settings",
+      "TableName": "Des2_RolAyarlari",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_RolAyarlari ( [RoleMappingID] INT IDENTITY(1,1) PRIMARY KEY, [RoleName] NVARCHAR(100) NOT NULL,[ProcessTagID] INT NOT NULL ,[SourceApi] NVARCHAR(200) NULL, [IsActive] BIT NOT NULL );",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Role Settings Endpoints",
+      "TableName": "Des2_RolAyarlari_Endpoints",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_RolAyarlari_Endpoints ( [EndpointID] INT IDENTITY(1,1) PRIMARY KEY, [RoleMappingID] INT NOT NULL, [TargetAPI] NVARCHAR(200) NOT NULL, [Endpoint] NVARCHAR(200) NULL, [IsActive] BIT NOT NULL, CONSTRAINT FK_RoleMapping_Endpoints FOREIGN KEY ([RoleMappingID]) REFERENCES {schema}.Des2_RolAyarlari([RoleMappingID]) ON DELETE CASCADE );",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Role Attribute Settings",
+      "TableName": "Des2_RolAyarlariAttributes",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_RolAyarlariAttributes ( [AttributeMappingID] INT IDENTITY(1,1) PRIMARY KEY, [RoleMappingID] INT NOT NULL, [AttributeName] NVARCHAR(100) NOT NULL, [IsSelected] BIT NOT NULL, FOREIGN KEY ([RoleMappingID]) REFERENCES {schema}.Des2_RolAyarlari([RoleMappingID]) ON DELETE CASCADE );",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart",
+      "TableName": "WTPart",
+      "CreateQuery": "",
+      "IsActive": false,
+      "Triggers": [
+        {
+          "TriggerName": "Part_EquivalenceLink_Control",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Part_EquivalenceLink_Control] ON {schema}.[WTPart] AFTER UPDATE AS BEGIN DECLARE @Part_ID BIGINT, @State NVARCHAR(200), @Number NVARCHAR(200), @ParcaAd NVARCHAR(200), @Versiyon NVARCHAR(30), @KulID BIGINT, @KulAd NVARCHAR(200), @ViewID BIGINT, @ViewAd NVARCHAR(30), @MasterID BIGINT, @idA3A6 BIGINT, @idA3B6 BIGINT, @AnaParcaPartID BIGINT, @MuadilParcaPartID BIGINT; SELECT @Part_ID = idA2A2, @State = statestate, @Versiyon = versionIdA2versionInfo + '.' + iterationIdA2iterationInfo, @KulID = idA3D2iterationInfo, @MasterID = idA3masterReference, @ViewID = idA3view FROM INSERTED; SELECT @ParcaAd = name, @Number = WTPartNumber FROM PLM1.WTPartMaster WHERE idA2A2 = @MasterID; SELECT @KulAd = name FROM PLM1.WTUser WHERE idA2A2 = @KulID; SELECT @ViewAd = name FROM PLM1.WTView WHERE idA2A2 = @ViewID; SELECT @idA3A6 = idA3A6, @idA3B6 = idA3B6 FROM PLM1.Des_EquivalenceLink_LogTable WHERE idA3A5 = @Part_ID OR idA3B5 = @Part_ID; SELECT @AnaParcaPartID = AnaParcaPartID, @MuadilParcaPartID = MuadilParcaPartID FROM PLM1.Des_CREATEnateLink_LogTable WHERE AnaParcaPartID = @Part_ID OR MuadilParcaPartID = @Part_ID; IF @idA3B6 = @ViewID BEGIN UPDATE PLM1.Des_EquivalenceLink_LogTable SET APartState = @State WHERE idA3A5 = @Part_ID AND idA3B5 != @Part_ID; END ELSE IF @idA3A6 = @ViewID BEGIN UPDATE PLM1.Des_EquivalenceLink_LogTable SET BPartState = @State WHERE idA3B5 = @Part_ID AND idA3A5 != @Part_ID; END; IF @AnaParcaPartID = @Part_ID BEGIN UPDATE PLM1.Des_CREATEnateLink_LogTable SET AnaParcaState = @State WHERE AnaParcaPartID = @Part_ID AND MuadilParcaPartID != @Part_ID; END ELSE IF @MuadilParcaPartID = @Part_ID BEGIN UPDATE PLM1.Des_CREATEnateLink_LogTable SET MuadilParcaState = @State WHERE MuadilParcaPartID = @Part_ID AND AnaParcaPartID != @Part_ID; END; END"
+        },
+        {
+          "TriggerName": "Part_Released",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Part_Released] ON {schema}.[WTPart] AFTER INSERT, UPDATE AS BEGIN DECLARE @Part_ID BIGINT, @State NVARCHAR(200), @Number NVARCHAR(200), @ParcaAd NVARCHAR(200), @Versiyon NVARCHAR(30), @KulID BIGINT, @KulAd NVARCHAR(200), @LogMesaj NVARCHAR(300), @ViewID BIGINT, @ViewAd NVARCHAR(30), @MasterID BIGINT, @ParcaState NVARCHAR(200), @ParcaPartID BIGINT, @ParcaPartMasterID BIGINT, @ParcaName NVARCHAR(150), @ParcaNumber NVARCHAR(MAX), @ParcaVersion NCHAR(30), @EntegrasyonDurum TINYINT; SELECT @ParcaPartID = idA2A2, @ParcaState = statestate, @ParcaVersion = versionIdA2versionInfo + '.' + iterationIdA2iterationInfo, @KulID = idA3D2iterationInfo, @ParcaPartMasterID = idA3masterReference, @ViewID = idA3view FROM INSERTED; IF @ParcaPartID IS NULL OR @ParcaState IS NULL OR @ParcaPartMasterID IS NULL BEGIN RETURN; END SELECT @ParcaName = name, @ParcaNumber = WTPartNumber FROM PLM1.WTPartMaster WHERE idA2A2 = @ParcaPartMasterID; SELECT @KulAd = name FROM PLM1.WTUser WHERE idA2A2 = @KulID; SELECT @ViewAd = name FROM PLM1.WTView WHERE idA2A2 = @ViewID; DECLARE @wtpResult INT = 0; IF EXISTS (SELECT 1 FROM {schema}.WTPart WHERE idA3masterReference = @ParcaPartMasterID AND statecheckoutInfo = 'wrk') BEGIN SET @wtpResult = 1; END ELSE BEGIN SET @wtpResult = ISNULL(@wtpResult, 2); END IF @wtpResult = 0 AND @ViewAd = 'Design' AND @ParcaState <> 'INWORK' BEGIN IF EXISTS (SELECT 1 FROM {schema}.[Des2_WTPart] WHERE ParcaPartID = @ParcaPartID) BEGIN UPDATE {schema}.[Des2_WTPart] SET ParcaState = @ParcaState, ParcaPartMasterID = @ParcaPartMasterID, ParcaName = @ParcaName, ParcaNumber = @ParcaNumber, ParcaVersion = @ParcaVersion, KulAd = @KulAd, EntegrasyonDurum = @EntegrasyonDurum, LogMesaj = CASE WHEN @ParcaState = 'RELEASED' THEN 'Parça gönderildi' WHEN @ParcaState = 'CANCELLED' THEN 'Parça iptal edildi' WHEN @ParcaState = 'INWORK' THEN 'Parça devam ediyor' ELSE LogMesaj END WHERE ParcaPartID = @ParcaPartID; END ELSE BEGIN INSERT INTO {schema}.[Des2_WTPart] (ParcaState, ParcaPartID, ParcaPartMasterID, ParcaName, ParcaNumber, ParcaVersion, KulAd, EntegrasyonDurum, LogMesaj) VALUES (@ParcaState, @ParcaPartID, @ParcaPartMasterID, @ParcaName, @ParcaNumber, @ParcaVersion, @KulAd, @EntegrasyonDurum, CASE WHEN @ParcaState = 'RELEASED' THEN 'Parça gönderildi' WHEN @ParcaState = 'CANCELLED' THEN 'Parça iptal edildi' WHEN @ParcaState = 'INWORK' THEN 'Parça devam ediyor' ELSE NULL END); INSERT INTO {schema}.[Des2_WTPart_Log] (ParcaState, ParcaPartID, ParcaPartMasterID, ParcaName, ParcaNumber, ParcaVersion, KulAd, EntegrasyonDurum, LogMesaj) VALUES (@ParcaState, @ParcaPartID, @ParcaPartMasterID, @ParcaName, @ParcaNumber, @ParcaVersion, @KulAd, @EntegrasyonDurum, CASE WHEN @ParcaState = 'RELEASED' THEN 'Parça gönderildi' WHEN @ParcaState = 'CANCELLED' THEN 'Parça iptal edildi' WHEN @ParcaState = 'INWORK' THEN 'Parça devam ediyor' ELSE NULL END); END; END; END"
+        },
+        {
+          "TriggerName": "Part_ReviseAndSaveAsClean",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Part_ReviseAndSaveAsClean] ON {schema}.[WTPart] AFTER INSERT AS BEGIN DECLARE @Part_ID BIGINT, @Part_ID2 NVARCHAR(MAX), @State NVARCHAR(200), @Number NVARCHAR(200), @ParcaAd NVARCHAR(200), @Versiyon NVARCHAR(30), @KulID BIGINT, @KulAd NVARCHAR(200), @ViewID BIGINT, @ViewAd NVARCHAR(30), @MasterID BIGINT, @StringDefinitionID BIGINT, @UpdateCount INT; SELECT @Part_ID = idA2A2, @Part_ID2 = idA2A2, @State = statestate, @Versiyon = versionIdA2versionInfo + '.' + iterationIdA2iterationInfo, @KulID = idA3D2iterationInfo, @MasterID = idA3masterReference, @ViewID = idA3view FROM INSERTED; SELECT @ParcaAd = name, @Number = WTPartNumber FROM PLM1.WTPartMaster WHERE idA2A2 = @MasterID; SELECT @KulAd = name FROM PLM1.WTUser WHERE idA2A2 = @KulID; SELECT @ViewAd = name FROM PLM1.WTView WHERE idA2A2 = @ViewID; IF @State = 'INWORK' BEGIN INSERT INTO PLM1.Des_LogDataReviseAndSaveAsProcess (statestate, PartID, AnaNumber, AnaParcaAd, Number, ParcaAd, Version, KulAd, LogCode, LogMesaj) VALUES (@State, @Part_ID, NULL, NULL, @Number, @ParcaAd, @Versiyon, @KulAd, 'DES-WTP-005', 'Parça oluşturuldu ve işlemde'); END END"
+        }
+      ]
+    },
+    {
+      "TableTitle": "WTPart",
+      "TableName": "Des2_WTPart",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart (LogID INT PRIMARY KEY IDENTITY, ParcaState NVARCHAR(200), ParcaPartID BIGINT, ParcaPartMasterID BIGINT, ParcaName NVARCHAR(150), ParcaNumber NVARCHAR(MAX), ParcaVersion NCHAR(30), KulAd NVARCHAR(50), LogDate DATETIME, EntegrasyonDurum TINYINT, LogMesaj NVARCHAR(300))",
+      "IsActive": false,
+      "Triggers": [
+        {
+          "TriggerName": "Des2_WTPart_Error_Control",
+          "CreateQuery": "CREATE TRIGGER {schema}.Des2_WTPart_Error_Control ON {schema}.Des2_WTPart AFTER INSERT AS BEGIN SET NOCOUNT ON; DELETE FROM {schema}.Des2_WTPart_Error WHERE [ParcaPartID] IN (SELECT [ParcaPartID] FROM inserted); END;"
+        }
+      ]
+    },
+    {
+      "TableTitle": "WTPart",
+      "TableName": "Des2_WTPart_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_Log (LogID INT PRIMARY KEY IDENTITY, ParcaState NVARCHAR(200), ParcaPartID BIGINT, ParcaPartMasterID BIGINT, ParcaName NVARCHAR(150), ParcaNumber NVARCHAR(MAX), ParcaVersion NCHAR(30), KulAd NVARCHAR(50), LogDate DATETIME, EntegrasyonDurum TINYINT, LogMesaj NVARCHAR(300), ActionType NVARCHAR(50), ActionDate DATETIME DEFAULT GETDATE())",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart",
+      "TableName": "Des2_WTPart_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_Sent (LogID INT PRIMARY KEY IDENTITY, ParcaState NVARCHAR(200), ParcaPartID BIGINT, ParcaPartMasterID BIGINT, ParcaName NVARCHAR(150), ParcaNumber NVARCHAR(MAX), ParcaVersion NCHAR(30), KulAd NVARCHAR(50), LogDate DATETIME, EntegrasyonDurum TINYINT, LogMesaj NVARCHAR(300), ActionType NVARCHAR(50), ActionDate DATETIME DEFAULT GETDATE())",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart",
+      "TableName": "Des2_WTPart_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_Error (ErrorID INT PRIMARY KEY IDENTITY, LogID INT, ParcaState NVARCHAR(200), ParcaPartID BIGINT, ParcaPartMasterID BIGINT, ParcaName NVARCHAR(150), ParcaNumber NVARCHAR(MAX), ParcaVersion NCHAR(30), KulAd NVARCHAR(50), LogDate DATETIME, EntegrasyonDurum TINYINT, LogMesaj NVARCHAR(300), ErrorMessage NVARCHAR(MAX), ErrorDate DATETIME DEFAULT GETDATE())",
+      "IsActive": false,
+      "Triggers": []
+    },
+
+    {
+      "TableTitle": "WTPart AlternateLink",
+      "TableName": "Des2_WTPart_AlternateLink",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLink ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLink] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLink ADD CONSTRAINT [DF_Des2_WTPart_AlternateLink_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart AlternateLink Error",
+      "TableName": "Des2_WTPart_AlternateLink_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLink_Error ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, [DenemeSayisi] [int] NULL, [DenemeTarihi] [datetime2](7) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLink_Error] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLink_Error ADD CONSTRAINT [DF_Des2_WTPart_AlternateLink_Error_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": [
+        {
+          "TriggerName": "WTPartAlternateError_Trigger",
+          "CreateQuery": "CREATE TRIGGER {schema}.[WTPartAlternateError_Trigger] ON {schema}.[Des2_WTPart_AlternateLink_Error] AFTER INSERT AS BEGIN SET NOCOUNT ON; DELETE FROM {schema}.[Des2_WTPart_AlternateLinkRemoved_Error] WHERE EXISTS (SELECT 1 FROM inserted i WHERE [Des2_WTPart_AlternateLinkRemoved_Error].[AnaParcaPartID] = i.[AnaParcaPartID] AND [Des2_WTPart_AlternateLinkRemoved_Error].[AnaParcaPartMasterID] = i.[AnaParcaPartMasterID] AND [Des2_WTPart_AlternateLinkRemoved_Error].[MuadilParcaPartID] = i.[MuadilParcaPartID] AND [Des2_WTPart_AlternateLinkRemoved_Error].[MuadilParcaMasterID] = i.[MuadilParcaMasterID]); END;"
+        }
+      ]
+    },
+    {
+      "TableTitle": "WTPart AlternateLink Log",
+      "TableName": "Des2_WTPart_AlternateLink_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLink_Log ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLink_Log] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLink_Log ADD CONSTRAINT [DF_Des2_WTPart_AlternateLink_Log_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart AlternateLink Sent",
+      "TableName": "Des2_WTPart_AlternateLink_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLink_Sent ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLink_Sent] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLink_Sent ADD CONSTRAINT [DF_Des2_WTPart_AlternateLink_Sent_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart AlternateLinkRemoved",
+      "TableName": "Des2_WTPart_AlternateLinkRemoved",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLinkRemoved ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLinkRemoved] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLinkRemoved ADD CONSTRAINT [DF_Des2_WTPart_AlternateLinkRemoved_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "WTPart AlternateLinkRemoved Error",
+      "TableName": "Des2_WTPart_AlternateLinkRemoved_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLinkRemoved_Error ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, [DenemeSayisi] [int] NULL, [DenemeTarihi] [datetime2](7) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLinkRemoved_Error] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLinkRemoved_Error ADD CONSTRAINT [DF_Des2_WTPart_AlternateLinkRemoved_Error_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": [
+        {
+          "TriggerName": "WTPartAlternateRemovedError_Trigger",
+          "CreateQuery": "CREATE TRIGGER {schema}.[WTPartAlternateRemovedError_Trigger] ON {schema}.[Des2_WTPart_AlternateLinkRemoved_Error] AFTER INSERT AS BEGIN SET NOCOUNT ON; DELETE FROM {schema}.[Des2_WTPart_AlternateLink_Error] WHERE EXISTS (SELECT 1 FROM inserted i WHERE [Des2_WTPart_AlternateLink_Error].[AnaParcaPartID] = i.[AnaParcaPartID] AND [Des2_WTPart_AlternateLink_Error].[AnaParcaPartMasterID] = i.[AnaParcaPartMasterID] AND [Des2_WTPart_AlternateLink_Error].[MuadilParcaPartID] = i.[MuadilParcaPartID] AND [Des2_WTPart_AlternateLink_Error].[MuadilParcaMasterID] = i.[MuadilParcaMasterID]); END;"
+        }
+      ]
+    },
+    {
+      "TableTitle": "WTPart AlternateLinkRemoved Sent",
+      "TableName": "Des2_WTPart_AlternateLinkRemoved_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_WTPart_AlternateLinkRemoved_Sent ([LogID] [int] IDENTITY(1,1) NOT NULL, [AnaParcaState] [nvarchar](200) NULL, [AnaParcaPartID] [bigint] NULL, [AnaParcaPartMasterID] [bigint] NULL, [AnaParcaName] [nvarchar](150) NULL, [AnaParcaNumber] [nvarchar](max) NULL, [AnaParcaVersion] [nchar](30) NULL, [MuadilParcaState] [nvarchar](200) NULL, [MuadilParcaPartID] [bigint] NULL, [MuadilParcaMasterID] [bigint] NULL, [MuadilParcaName] [nvarchar](150) NULL, [MuadilParcaNumber] [nvarchar](max) NULL, [MuadilParcaVersion] [nchar](30) NULL, [KulAd] [nvarchar](50) NULL, [LogDate] [datetime] NULL, [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](300) NULL, CONSTRAINT [PK_Des2_WTPart_AlternateLinkRemoved_Sent] PRIMARY KEY CLUSTERED ([LogID] ASC)); ALTER TABLE {schema}.Des2_WTPart_AlternateLinkRemoved_Sent ADD CONSTRAINT [DF_Des2_WTPart_AlternateLinkRemoved_Sent_LogDate] DEFAULT (getdate()) FOR [LogDate]",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument (Ana Tablo)",
+      "TableName": "Des2_EPMDocument",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": [
+        {
+          "TriggerName": "Des2_EPMDocument_Error_Control",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Des2_EPMDocument_Error_Control] ON {schema}.[Des2_EPMDocument] AFTER INSERT AS BEGIN SET NOCOUNT ON; DELETE FROM {schema}.Des2_EPMDocument_Error WHERE [EPMDocID] IN (SELECT [EPMDocID] FROM inserted); END;"
+        }
+      ]
+    },
+    {
+      "TableTitle": "EPMDocument Log",
+      "TableName": "Des2_EPMDocument_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Log ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Sent (Gönderilenler)",
+      "TableName": "Des2_EPMDocument_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Sent ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Error (Hatalılar)",
+      "TableName": "Des2_EPMDocument_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Error ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Cancelled (İptaller)",
+      "TableName": "Des2_EPMDocument_Cancelled",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Cancelled ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Cancelled Log",
+      "TableName": "Des2_EPMDocument_Cancelled_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Cancelled_Log ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Cancelled Sent",
+      "TableName": "Des2_EPMDocument_Cancelled_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Cancelled_Sent ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Cancelled Error",
+      "TableName": "Des2_EPMDocument_Cancelled_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Cancelled_Error ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [EPMDocID] [bigint] NULL, [StateDegeri] [nvarchar](200) NULL, [idA3masterReference] [bigint] NULL, [CadName] [nvarchar](200) NULL, [name] [nvarchar](200) NULL, [docNumber] [nvarchar](200) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Pending Operations",
+      "TableName": "Des2_YapilacakIslem",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_YapilacakIslem (ID INT PRIMARY KEY IDENTITY, RoIAdi NVARCHAR(MAX), KaynakAdresID INT, YapilacakIslemID INT, ApiURL NVARCHAR(MAX), ApiAnaKaynak NVARCHAR(MAX), ApiEndPoint NVARCHAR(MAX), Durum TINYINT)",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Mail Settings",
+      "TableName": "Des2_MailSettings",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_MailSettings ( [Id] BIGINT IDENTITY(1,1) PRIMARY KEY, [SmtpServer] NVARCHAR(255) NOT NULL, [SmtpPort] INT NOT NULL DEFAULT 587, [SmtpUsername] NVARCHAR(255) NOT NULL, [SmtpPassword] NVARCHAR(500) NOT NULL, [EnableSsl] BIT NOT NULL DEFAULT 1, [FromEmail] NVARCHAR(255) NOT NULL, [FromDisplayName] NVARCHAR(255) NULL, [SendOnError] BIT NOT NULL DEFAULT 1, [SendOnSuccess] BIT NOT NULL DEFAULT 0, [SendOnFinalFailure] BIT NOT NULL DEFAULT 1, [IsActive] BIT NOT NULL DEFAULT 1, [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE(), [UpdatedDate] DATETIME NULL, [DeletedDate] DATETIME NULL );",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Mail Recipients",
+      "TableName": "Des2_MailRecipients",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_MailRecipients ( [Id] BIGINT IDENTITY(1,1) PRIMARY KEY, [MailSettingsId] BIGINT NOT NULL, [EmailAddress] NVARCHAR(255) NOT NULL, [DisplayName] NVARCHAR(255) NULL, [IsActive] BIT NOT NULL DEFAULT 1, [CreatedDate] DATETIME NOT NULL DEFAULT GETDATE(), [UpdatedDate] DATETIME NULL, [DeletedDate] DATETIME NULL, CONSTRAINT FK_MailRecipients_MailSettings FOREIGN KEY ([MailSettingsId]) REFERENCES {schema}.Des2_MailSettings([Id]) ON DELETE CASCADE );",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Error Tracking",
+      "TableName": "Des2_ErrorTracking",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_ErrorTracking (Id INT IDENTITY(1,1) PRIMARY KEY, ErrorType NVARCHAR(255) NOT NULL, ErrorMessage NVARCHAR(MAX) NOT NULL, OperationType NVARCHAR(255) NOT NULL, ErrorCount INT NOT NULL DEFAULT 1, FirstOccurrence DATETIME2 NOT NULL, LastOccurrence DATETIME2 NOT NULL, LastNotificationTime DATETIME2 NULL, IsActive BIT NOT NULL DEFAULT 1, CreatedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE(), UpdatedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE())",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Error Notification History",
+      "TableName": "Des2_ErrorNotificationHistory",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_ErrorNotificationHistory (Id INT IDENTITY(1,1) PRIMARY KEY, ErrorTrackingId INT NOT NULL, NotificationTime DATETIME2 NOT NULL, EmailSubject NVARCHAR(500) NOT NULL, EmailBody NVARCHAR(MAX) NOT NULL, Recipients NVARCHAR(MAX) NOT NULL, CreatedDate DATETIME2 NOT NULL DEFAULT GETUTCDATE(), CONSTRAINT FK_ErrorNotificationHistory_ErrorTracking FOREIGN KEY (ErrorTrackingId) REFERENCES {schema}.Des2_ErrorTracking(Id))",
+      "IsActive": false,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "Orginal System Table",
+      "TableName": "WTPartAlternateLink",
+      "CreateQuery": "",
+      "IsActive": false,
+      "Triggers": [
+        {
+          "TriggerName": "MuadilTakip",
+          "CreateQuery": "CREATE TRIGGER {schema}.[MuadilTakip] ON {schema}.[WTPartAlternateLink] AFTER INSERT,DELETE AS BEGIN SET NOCOUNT ON; BEGIN TRY DECLARE @MuadilParcaMasterID INT, @AnaParcaPartMasterID INT, @AnaParcaState NVARCHAR(50), @AnaParcaPartID INT, @AnaParcaName NVARCHAR(255), @AnaParcaNumber NVARCHAR(50), @AnaParcaVersion NVARCHAR(50), @MuadilParcaState NVARCHAR(50), @MuadilParcaPartID INT, @MuadilParcaName NVARCHAR(255), @MuadilParcaNumber NVARCHAR(50), @MuadilParcaVersion NVARCHAR(50), @iterationIdA2iterationInfoA NVARCHAR(150), @iterationIdA2iterationInfoB NVARCHAR(150), @versionIdA2versionInfoA NVARCHAR(150), @versionIdA2versionInfoB NVARCHAR(150), @KulAd NVARCHAR(200); SET @KulAd = SYSTEM_USER; IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS(SELECT * FROM DELETED) BEGIN BEGIN TRANSACTION; SELECT @MuadilParcaMasterID = idA3B5, @AnaParcaPartMasterID = idA3A5 FROM INSERTED; IF @MuadilParcaMasterID IS NULL OR @AnaParcaPartMasterID IS NULL BEGIN ROLLBACK TRANSACTION; RETURN; END SELECT @versionIdA2versionInfoA = versionIdA2versionInfo, @iterationIdA2iterationInfoA = iterationIdA2iterationInfo, @AnaParcaState = statestate, @AnaParcaPartID = idA2A2 FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID) AND iterationIdA2iterationInfo = (SELECT MAX(iterationIdA2iterationInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID)); SELECT @versionIdA2versionInfoB = versionIdA2versionInfo, @iterationIdA2iterationInfoB = iterationIdA2iterationInfo, @MuadilParcaState = statestate, @MuadilParcaPartID = idA2A2 FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID) AND iterationIdA2iterationInfo = (SELECT MAX(iterationIdA2iterationInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID)); SELECT @AnaParcaName = name, @AnaParcaNumber = WTPartNumber FROM {schema}.WTPartMaster WHERE idA2A2 = @AnaParcaPartMasterID; SELECT @MuadilParcaName = name, @MuadilParcaNumber = WTPartNumber FROM {schema}.WTPartMaster WHERE idA2A2 = @MuadilParcaMasterID; IF @AnaParcaPartID IS NULL OR @AnaParcaState IS NULL OR @AnaParcaNumber IS NULL OR @MuadilParcaState IS NULL OR @MuadilParcaPartID IS NULL OR @MuadilParcaNumber IS NULL OR @versionIdA2versionInfoA IS NULL OR @iterationIdA2iterationInfoA IS NULL OR @versionIdA2versionInfoB IS NULL OR @iterationIdA2iterationInfoB IS NULL BEGIN ROLLBACK TRANSACTION; RETURN; END SET @AnaParcaVersion = @versionIdA2versionInfoA + '.' + @iterationIdA2iterationInfoA; SET @MuadilParcaVersion = @versionIdA2versionInfoB + '.' + @iterationIdA2iterationInfoB; IF EXISTS (SELECT 1 FROM {schema}.Des2_WTPart_AlternateLinkRemoved WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID) BEGIN DELETE FROM {schema}.Des2_WTPart_AlternateLinkRemoved WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID; END IF EXISTS (SELECT 1 FROM {schema}.Des2_WTPart_AlternateLink WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID) BEGIN UPDATE {schema}.Des2_WTPart_AlternateLink SET AnaParcaState = @AnaParcaState, AnaParcaPartID = @AnaParcaPartID, AnaParcaName = @AnaParcaName, AnaParcaNumber = @AnaParcaNumber, AnaParcaVersion = @AnaParcaVersion, MuadilParcaState = @MuadilParcaState, MuadilParcaPartID = @MuadilParcaPartID, MuadilParcaName = @MuadilParcaName, MuadilParcaNumber = @MuadilParcaNumber, MuadilParcaVersion = @MuadilParcaVersion, KulAd = @KulAd, LogDate = GETDATE(), LogMesaj = 'Ana Parça: ' + @AnaParcaName + ' Muadil Parça: ' + @MuadilParcaName + ' ile ilişkisi güncellendi' WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID; END ELSE BEGIN INSERT INTO {schema}.Des2_WTPart_AlternateLink (AnaParcaState, AnaParcaPartID, AnaParcaPartMasterID, AnaParcaName, AnaParcaNumber, AnaParcaVersion, MuadilParcaState, MuadilParcaPartID, MuadilParcaMasterID, MuadilParcaName, MuadilParcaNumber, MuadilParcaVersion, KulAd, LogMesaj, LogDate) VALUES (@AnaParcaState, @AnaParcaPartID, @AnaParcaPartMasterID, @AnaParcaName, @AnaParcaNumber, @AnaParcaVersion, @MuadilParcaState, @MuadilParcaPartID, @MuadilParcaMasterID, @MuadilParcaName, @MuadilParcaNumber, @MuadilParcaVersion, @KulAd, 'Ana Parça: ' + @AnaParcaName + ' Muadil Parça: ' + @MuadilParcaName + ' ile ilişkisi eklendi', GETDATE()); END COMMIT TRANSACTION; END IF NOT EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED) BEGIN BEGIN TRANSACTION; SELECT @MuadilParcaMasterID = idA3B5, @AnaParcaPartMasterID = idA3A5 FROM DELETED; IF @MuadilParcaMasterID IS NULL OR @AnaParcaPartMasterID IS NULL BEGIN ROLLBACK TRANSACTION; RETURN; END SELECT @versionIdA2versionInfoA = versionIdA2versionInfo, @iterationIdA2iterationInfoA = iterationIdA2iterationInfo, @AnaParcaState = statestate, @AnaParcaPartID = idA2A2 FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID) AND iterationIdA2iterationInfo = (SELECT MAX(iterationIdA2iterationInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @AnaParcaPartMasterID)); SELECT @versionIdA2versionInfoB = versionIdA2versionInfo, @iterationIdA2iterationInfoB = iterationIdA2iterationInfo, @MuadilParcaState = statestate, @MuadilParcaPartID = idA2A2 FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID) AND iterationIdA2iterationInfo = (SELECT MAX(iterationIdA2iterationInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID AND versionIdA2versionInfo = (SELECT MAX(versionIdA2versionInfo) FROM {schema}.WTPart WHERE idA3masterReference = @MuadilParcaMasterID)); SELECT @AnaParcaName = name, @AnaParcaNumber = WTPartNumber FROM {schema}.WTPartMaster WHERE idA2A2 = @AnaParcaPartMasterID; SELECT @MuadilParcaName = name, @MuadilParcaNumber = WTPartNumber FROM {schema}.WTPartMaster WHERE idA2A2 = @MuadilParcaMasterID; IF @AnaParcaPartID IS NULL OR @AnaParcaState IS NULL OR @AnaParcaNumber IS NULL OR @MuadilParcaState IS NULL OR @MuadilParcaPartID IS NULL OR @MuadilParcaNumber IS NULL OR @versionIdA2versionInfoA IS NULL OR @iterationIdA2iterationInfoA IS NULL OR @versionIdA2versionInfoB IS NULL OR @iterationIdA2iterationInfoB IS NULL BEGIN ROLLBACK TRANSACTION; RETURN; END SET @AnaParcaVersion = @versionIdA2versionInfoA + '.' + @iterationIdA2iterationInfoA; SET @MuadilParcaVersion = @versionIdA2versionInfoB + '.' + @iterationIdA2iterationInfoB; DELETE FROM {schema}.Des2_WTPart_AlternateLink WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID; IF EXISTS (SELECT 1 FROM {schema}.Des2_WTPart_AlternateLinkRemoved WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID) BEGIN UPDATE {schema}.Des2_WTPart_AlternateLinkRemoved SET AnaParcaState = @AnaParcaState, AnaParcaPartID = @AnaParcaPartID, AnaParcaName = @AnaParcaName, AnaParcaNumber = @AnaParcaNumber, AnaParcaVersion = @AnaParcaVersion, MuadilParcaState = @MuadilParcaState, MuadilParcaPartID = @MuadilParcaPartID, MuadilParcaName = @MuadilParcaName, MuadilParcaNumber = @MuadilParcaNumber, MuadilParcaVersion = @MuadilParcaVersion, KulAd = @KulAd, LogDate = GETDATE(), LogMesaj = 'Ana Parça: ' + @AnaParcaName + ' Muadil Parça: ' + @MuadilParcaName + ' ile ilişkisi silindi' WHERE AnaParcaPartMasterID = @AnaParcaPartMasterID AND MuadilParcaMasterID = @MuadilParcaMasterID; END ELSE BEGIN INSERT INTO {schema}.Des2_WTPart_AlternateLinkRemoved (AnaParcaState, AnaParcaPartID, AnaParcaPartMasterID, AnaParcaName, AnaParcaNumber, AnaParcaVersion, MuadilParcaState, MuadilParcaPartID, MuadilParcaMasterID, MuadilParcaName, MuadilParcaNumber, MuadilParcaVersion, KulAd, LogMesaj, LogDate) VALUES (@AnaParcaState, @AnaParcaPartID, @AnaParcaPartMasterID, @AnaParcaName, @AnaParcaNumber, @AnaParcaVersion, @MuadilParcaState, @MuadilParcaPartID, @MuadilParcaMasterID, @MuadilParcaName, @MuadilParcaNumber, @MuadilParcaVersion, @KulAd, 'Ana Parça: ' + @AnaParcaName + ' Muadil Parça: ' + @MuadilParcaName + ' ile ilişkisi silindi', GETDATE()); END COMMIT TRANSACTION; END END TRY BEGIN CATCH IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION; DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE(); DECLARE @ErrorSeverity INT = ERROR_SEVERITY(); DECLARE @ErrorState INT = ERROR_STATE(); END CATCH; END"
+        }
+      ]
+    }
+  ]
+}
+

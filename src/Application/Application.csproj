@@ -1,0 +1,75 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Auth\Commands\RevokeToken\" />
+    <Folder Include="Features\Auth\Queries\" />
+    <Folder Include="Features\DatabaseManagement\Constants\" />
+    <Folder Include="Features\IntegrationSettings\RoleMappings\Constants\" />
+    <Folder Include="Features\IntegrationSettings\RoleMappings\Rules\" />
+    <Folder Include="Features\IntegrationSettings\ModuleSettings\Constants\" />
+    <Folder Include="Features\IntegrationSettings\ModuleSettings\Rules\" />
+    <Folder Include="Features\IntegrationSettings\RoleProcessTags\Constants\" />
+    <Folder Include="Features\IntegrationSettings\RoleProcessTags\Rules\" />
+    <Folder Include="Features\Log\Constants\" />
+    <Folder Include="Features\Log\Commands\" />
+    <Folder Include="Features\Log\Queries\GetLogList\" />
+    <Folder Include="Features\Log\Rules\" />
+    <Folder Include="Features\Users\Commands\Delete\" />
+    <Folder Include="Features\Users\Commands\UpdateFromAuth\" />
+    <Folder Include="Features\Users\Commands\Update\" />
+    <Folder Include="Features\Users\Resources\Locales\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentCancelled\Constants\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentCancelled\Queries\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentCancelled\Rules\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentReleased\Constants\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentReleased\Queries\" />
+    <Folder Include="Features\WindchillIntegration\EPMDocumentReleased\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartAlternateLinkRemoved\Constants\" />
+    <Folder Include="Features\WindchillIntegration\WTPartAlternateLinkRemoved\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartAlternateLink\Constants\" />
+    <Folder Include="Features\WindchillIntegration\WTPartAlternateLink\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartCancelled\Constants\" />
+    <Folder Include="Features\WindchillIntegration\WTPartCancelled\Queries\" />
+    <Folder Include="Features\WindchillIntegration\WTPartCancelled\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartLog\Commands\" />
+    <Folder Include="Features\WindchillIntegration\WTPartLog\Constants\" />
+    <Folder Include="Features\WindchillIntegration\WTPartLog\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartReleased\Constants\" />
+    <Folder Include="Features\WindchillIntegration\WTPartReleased\Rules\" />
+    <Folder Include="Features\WindchillIntegration\WTPartReleased\Queries\" />
+    <Folder Include="Features\WindchillManagement\Commands\WtUser\" />
+    <Folder Include="Features\WindchillManagement\Constants\" />
+    <Folder Include="Features\WindchillManagement\Queries\WtUser\GetList\" />
+    <Folder Include="Features\WindchillManagement\Queries\WtUser\GetById\" />
+    <Folder Include="Features\WTParts\Constants\" />
+    <Folder Include="Features\WTParts\Queries\GetById\" />
+    <Folder Include="Features\WTParts\Rules\" />
+    <Folder Include="Services\AuthenticatorService\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Features\MailService\Commands\SaveMailSettings\MailRecipientRequest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

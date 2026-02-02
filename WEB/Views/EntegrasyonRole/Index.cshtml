@@ -1,0 +1,495 @@
+﻿@model List<WEB.Models.RoleMappingViewModel>
+@{
+    ViewData["Title"] = "Rol Ayarları";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Rol Ayarları</h1>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#roleSettingsModal" onclick="clearRoleModal()">Rol Ekle</button>
+    </div>
+
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var role in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>@role.RoleName</span>
+                            <div class="d-flex align-items-center">
+                                <div class="form-check form-switch me-2">
+                                    <input class="form-check-input toggle-role-active" type="checkbox" data-role-id="@role.Id" @(role.IsActive ? "checked" : "")>
+                                </div>
+                                <button class="btn btn-primary btn-sm me-1 edit-role-btn" data-role-id="@role.Id" data-bs-toggle="modal" data-bs-target="#roleSettingsModal">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRole(@role.Id)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Kaynak API:</strong> @role.SourceApi</p>
+                            <p><strong>Process Tag:</strong> @role.ProcessTagName</p>
+                            <p>
+                                <strong>Hedef API'ler:</strong>
+                                @if (role.Endpoints != null && role.Endpoints.Any())
+                                {
+                                    if (role.Endpoints.Count > 5)
+                                    {
+                                        <a class="btn btn-link p-0" data-bs-toggle="collapse" href="#collapseEndpoints_@role.Id" role="button" aria-expanded="false" aria-controls="collapseEndpoints_@role.Id">
+                                            @role.Endpoints.Count adet hedef API var, tıkla
+                                        </a>
+                                        <div class="collapse" id="collapseEndpoints_@role.Id">
+                                            <ul class="list-unstyled mt-2">
+                                                @foreach (var ep in role.Endpoints)
+                                                {
+                                                    <li>@ep.TargetApi (@ep.Endpoint)</li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <ul class="list-unstyled">
+                                            @foreach (var ep in role.Endpoints)
+                                            {
+                                                <li>@ep.TargetApi (@ep.Endpoint)</li>
+                                            }
+                                        </ul>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>Yok</span>
+                                }
+                            </p>
+                            <p>
+                                <strong>Durum:</strong>
+                                @if (role.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Pasif</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info">Kayıtlı rol ayarı bulunamadı.</div>
+        }
+    </div>
+</div>
+
+<!-- Modal: Rol Ekle/Düzenle -->
+<div class="modal fade" id="roleSettingsModal" tabindex="-1" aria-labelledby="roleSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="position: relative;">
+
+            <!-- Global Loader Overlay: Yeni loader HTML yapısı kullanılıyor -->
+            <div id="modalLoadingOverlay"
+                 class="page-loader flex-column bg-dark bg-opacity-25"
+                 style="position: absolute; z-index: 1050; width: 100%; height: 100%; display: none; align-items: center; justify-content: center;">
+                <span class="spinner-border text-primary" role="status"></span>
+                <span class="text-gray-800 fs-6 fw-semibold mt-5">Loading...</span>
+            </div>
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleSettingsModalLabel">Rol Ayarları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roleSettingsForm">
+                    <input type="hidden" id="roleId" name="id" />
+                    <div class="mb-3">
+                        <label for="roleName" class="form-label">Rol Adı</label>
+                        <input type="text" class="form-control" id="roleName" name="roleName" placeholder="Rol adını girin" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="sourceApi" class="form-label">Kaynak API</label>
+                        <input type="text" class="form-control" id="sourceApi" name="sourceApi" placeholder="Kaynak API'yi girin" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="isActive" class="form-label">Aktif Mi?</label>
+                        <select class="form-control" id="isActive" name="isActive" required>
+                            <option value="true">Aktif</option>
+                            <option value="false">Pasif</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="processTagID" class="form-label">Process Tag</label>
+                        <select class="form-control" id="processTagID" name="ProcessTagId" required>
+                            <option value="">Seçiniz...</option>
+                            <!-- Process Tagler dinamik olarak gelecek -->
+                        </select>
+                    </div>
+
+                    <hr />
+                    <h6>Hedef API'ler</h6>
+                    <div id="roleEndpointsContainer">
+                        <!-- Hedef API satırları burada oluşturulacak -->
+                    </div>
+                    <button type="button" id="addRoleEndpointBtn" class="btn btn-secondary btn-sm">Yeni Hedef API Ekle</button>
+
+                    <hr />
+                    <h6>Windchill Attributes Seçimi</h6>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="availableAttributes" class="form-label">Mevcut Windchill Attributes</label>
+                            <select id="availableAttributes" class="form-select" multiple style="height:200px;"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="selectedAttributes" class="form-label">Seçilen Windchill Attributes</label>
+                            <select id="selectedAttributes" class="form-select" name="selectedAttributes" multiple style="height:200px;"></select>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <button type="button" id="addAttributeBtn" class="btn btn-secondary btn-sm">Seç →</button>
+                        <button type="button" id="removeAttributeBtn" class="btn btn-secondary btn-sm">← Kaldır</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" id="saveRoleSettingsBtn" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                $(document).ready(function () {
+
+            // Process Tag'leri çekip dropdown'ı doldurur.
+            function loadProcessTags() {
+                $.ajax({
+                    url: '/EntegrasyonRole/GetProcessTags',
+                    type: 'GET',
+                    contentType: 'application/json',
+                    success: function (data) {
+                        var $processTagDropdown = $("#processTagID");
+                        $processTagDropdown.empty();
+                        $processTagDropdown.append('<option value="">Seçiniz...</option>');
+                        $.each(data, function (i, tag) {
+                            $processTagDropdown.append('<option value="' + tag.processTagID + '">' + tag.tagName + '</option>');
+                        });
+                    },
+                    error: function (err) {
+                        console.error("Process Tag'ler alınırken hata oluştu:", err);
+                        toastr.error("Process Tag'ler alınırken bir hata oluştu.");
+                    }
+                });
+            }
+            loadProcessTags();
+
+            // Hedef API ekleme butonu
+            $("#addRoleEndpointBtn").click(function () {
+                var endpointRow = `<div class="row mb-2 endpoint-row">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                        </div>
+                                    </div>`;
+                $("#roleEndpointsContainer").append(endpointRow);
+            });
+
+            // Hedef API silme işlemi
+            $(document).on("click", ".remove-endpoint", function () {
+                $(this).closest(".endpoint-row").remove();
+            });
+
+            // Windchill Attributes'i yükler. Callback varsa, yüklemeden sonra ondan sonra tetiklenir.
+            function loadWindchillAttributes(callback) {
+                // Global overlay'ı göster
+                $("#modalLoadingOverlay").show();
+                $.ajax({
+                    url: '/EntegrasyonRole/GetWindchillAttributes',
+                    type: 'GET',
+                    contentType: 'application/json',
+                    success: function (data) {
+                        var $available = $('#availableAttributes');
+                        $available.empty();
+                        $.each(data, function (index, attr) {
+                            $available.append('<option value="' + attr + '">' + attr + '</option>');
+                        });
+                        $("#modalLoadingOverlay").hide();
+                        if (callback && typeof callback === "function") {
+                            callback();
+                        }
+                    },
+                    error: function (err) {
+                        console.error("Windchill Attributes alınırken hata oluştu:", err);
+                        $("#modalLoadingOverlay").hide();
+                        toastr.error("Windchill Attributes yüklenirken hata oluştu");
+                    }
+                });
+            }
+
+            // Modal açıldığında Windchill Attributes listesini yükle (yeni rol ekleme için)
+            $('#roleSettingsModal').on('shown.bs.modal', function () {
+                // Eğer düzenleme var ise, edit kısmında ayrı loadWindchillAttributes çağrısı yapılacak.
+                // Yeni rol ekleme ise direkt listeyi yüklüyoruz.
+                if ($("#roleId").val() === "") {
+                    loadWindchillAttributes();
+                }
+            });
+
+                    $('#roleSettingsModal').on('hidden.bs.modal', function () {
+            // Formu sıfırla
+            var $form = $(this).find('#roleSettingsForm');
+            $form[0].reset();
+
+            // Gizlenmiş input'ları temizle (örn. id alanı)
+            $(this).find('#roleId').val("");
+
+            // Endpoint container'ı ve attribute listelerini temizle
+            $(this).find('#roleEndpointsContainer').empty();
+            $(this).find('#selectedAttributes').empty();
+            $(this).find('#availableAttributes').empty();
+
+            // Varsayılan endpoint satırını ekle
+            var endpointRow = `<div class="row mb-2 endpoint-row">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                    </div>
+                                </div>`;
+            $(this).find('#roleEndpointsContainer').append(endpointRow);
+        });
+
+            // Seçim butonları: available listesinden seçilenleri selected'a taşıma
+            $('#addAttributeBtn').on('click', function () {
+                $('#availableAttributes option:selected').each(function () {
+                    var value = $(this).val();
+                    // Tekrar eklenmemesi için kontrol
+                    if ($('#selectedAttributes option[value="' + value + '"]').length === 0) {
+                        $('#selectedAttributes').append($(this).clone());
+                        $(this).remove();
+                    }
+                });
+            });
+
+            // İkinci yönde: selected listesinden seçilenleri available'a taşıma
+            $('#removeAttributeBtn').on('click', function () {
+                $('#selectedAttributes option:selected').each(function () {
+                    var value = $(this).val();
+                    if ($('#availableAttributes option[value="' + value + '"]').length === 0) {
+                        $('#availableAttributes').append($(this).clone());
+                        $(this).remove();
+                    }
+                });
+            });
+
+            // Rol ayarlarını kaydetmek için AJAX (create/update)
+              $("#saveRoleSettingsBtn").click(function () {
+            var roleId = parseInt($("#roleId").val()) || 0;
+            var formData = {
+                id: roleId,
+                roleName: $("#roleName").val(),
+                sourceApi: $("#sourceApi").val(),
+                isActive: $("#isActive").val() === "true",
+                processTagId: parseInt($("#processTagID").val()) || 0,
+                endpoints: [],
+                // Windchill Attributes için artık nesneler oluşturacağız
+                windchillAttributes: []
+            };
+
+            // Endpoints ekleniyor
+            $("#roleEndpointsContainer .endpoint-row").each(function () {
+                var targetApi = $(this).find('input[name="targetApi"]').val();
+                var endpoint = $(this).find('input[name="endpoint"]').val();
+                formData.endpoints.push({ targetApi: targetApi, endpoint: endpoint, isActive: true });
+            });
+
+            // Seçilen attribute'ler için nesne oluşturuluyor
+            $("#selectedAttributes option").each(function () {
+                formData.windchillAttributes.push({
+                    attributeName: $(this).val(),
+                    isSelected: true
+                });
+            });
+
+            var url = roleId > 0 ? '/EntegrasyonRole/UpdateRole' : '/EntegrasyonRole/CreateRole';
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    toastr.success("Rol ayarları başarıyla kaydedildi.");
+                    location.reload();
+                },
+                error: function (err) {
+                    toastr.error("Rol ayarları kaydedilirken bir hata oluştu.");
+                }
+            });
+        });
+
+
+            // Toggle, silme ve düzenleme işlemleri
+            $(document).on("change", ".toggle-role-active", function () {
+                var roleId = $(this).data("role-id");
+                var isActive = $(this).is(":checked");
+                $.ajax({
+                    url: '/EntegrasyonRole/ToggleRoleActive',
+                    type: 'POST',
+                    data: { id: roleId, isActive: isActive },
+                    success: function (response) {
+                        if (response.success) {
+                            toastr.success("Rol aktiflik durumu güncellendi.");
+                            location.reload();
+                        } else {
+                            toastr.error("Aktiflik durumu güncellenirken hata oluştu.");
+                        }
+                    },
+                    error: function (err) {
+                        toastr.error("Aktiflik durumu güncellenirken hata oluştu.");
+                    }
+                });
+            });
+
+            window.deleteRole = function (roleId) {
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu rolü silmek istediğinize emin misiniz?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, sil!',
+                    cancelButtonText: 'Hayır, iptal et!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/EntegrasyonRole/DeleteRole',
+                            type: 'POST',
+                            data: { id: roleId },
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire('Silindi!', 'Rol başarıyla silindi.', 'success').then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Hata!', 'Rol silinirken bir hata oluştu.', 'error');
+                                }
+                            },
+                            error: function (err) {
+                                Swal.fire('Hata!', 'Rol silinirken bir hata oluştu.', 'error');
+                            }
+                        });
+                    }
+                });
+            };
+
+            // Düzenleme (edit) işlemi: seçilen rolün bilgilerini modal formuna doldurur.
+            $(document).on("click", ".edit-role-btn", function () {
+                var roleId = $(this).data("role-id");
+                $.ajax({
+                    url: '/EntegrasyonRole/GetRoleById',
+                    type: 'GET',
+                    data: { id: roleId },
+                    success: function (roleData) {
+                        $("#roleId").val(roleData.id);
+                        $("#roleName").val(roleData.roleName);
+                        $("#sourceApi").val(roleData.sourceApi);
+                        $("#isActive").val(roleData.isActive.toString());
+                        $("#processTagID").val(roleData.processTagId);
+                        $("#roleEndpointsContainer").empty();
+                        if (roleData.endpoints && roleData.endpoints.length > 0) {
+                            $.each(roleData.endpoints, function (i, ep) {
+                                var endpointRow = `<div class="row mb-2 endpoint-row">
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" placeholder="Target API" name="targetApi" value="${ep.targetApi}" required>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" value="${ep.endpoint}" required>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                                        </div>
+                                                    </div>`;
+                                $("#roleEndpointsContainer").append(endpointRow);
+                            });
+                        } else {
+                            $("#roleEndpointsContainer").html(`<div class="row mb-2 endpoint-row">
+                                                                    <div class="col-md-5">
+                                                                        <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                                                    </div>
+                                                                    <div class="col-md-5">
+                                                                        <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                                                    </div>
+                                                                </div>`);
+                        }
+
+                        // Düzenleme yapılacaksa, rolün mevcut Windchill Attributes verisi (nesne olarak gelecek) var ise;
+                        // önce availableAttributes listesini global olarak yeniden yükleyip, callback içinde,
+                        // ilgili attribute'ları available listesinden kaldırıp selected listeye ekliyoruz.
+                        if (roleData.windchillAttributes && roleData.windchillAttributes.length) {
+                            loadWindchillAttributes(function () {
+                                $.each(roleData.windchillAttributes, function (i, attrObj) {
+                                    // attrObj, RoleAttributeViewModel tipinde; attributeName değerini alıyoruz.
+                                    var attrName = attrObj.attributeName;
+                                    var $option = $('#availableAttributes option[value="' + attrName + '"]');
+                                    if ($option.length > 0) {
+                                        $('#selectedAttributes').append($option.clone());
+                                        $option.remove();
+                                    }
+                                });
+                            });
+                        } else {
+                            loadWindchillAttributes();
+                        }
+                    },
+                    error: function (err) {
+                        toastr.error("Rol bilgileri alınırken bir hata oluştu.");
+                    }
+                });
+            });
+
+            // Modal'ı temizleme (yeni kayıt) işlemi
+            window.clearRoleModal = function () {
+                $("#roleSettingsForm")[0].reset();
+                $("#roleId").val("");
+                $("#roleEndpointsContainer").empty();
+                $("#selectedAttributes").empty();
+                $("#availableAttributes").empty();
+                var endpointRow = `<div class="row mb-2 endpoint-row">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" placeholder="Target API" name="targetApi" required>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" placeholder="Endpoint" name="endpoint" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger btn-sm remove-endpoint">Sil</button>
+                                        </div>
+                                    </div>`;
+                $("#roleEndpointsContainer").append(endpointRow);
+                loadProcessTags();
+                loadWindchillAttributes();
+            };
+        });
+    </script>
+
+
+}

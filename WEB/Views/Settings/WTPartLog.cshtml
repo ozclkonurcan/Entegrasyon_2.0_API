@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "WTPart Logları";
+}
+
+<h2 class="mb-4">WTPart Logları</h2>
+
+<!-- 🚀 Filtreleme & Arama Alanı -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" id="searchQuery" class="form-control" placeholder="Arama yap..." />
+            </div>
+            <div class="col-md-3">
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <!-- Filtreleme butonuna tıklandığında filterLogs() çalışır -->
+                <button class="btn btn-primary w-100" onclick="filterLogs()">Filtrele</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📌 Log Tablosu -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Parça Adı</th>
+                        <th>Parça Numarası</th>
+                        <th>Kullanıcı</th>
+                        <th>İşlem Türü</th>
+                        <th>Tarih 📅</th>
+                        <th>Mesaj</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <!-- Veriler buraya yüklenecek -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 📌 Sayfalama -->
+<div class="d-flex justify-content-center mt-3">
+    <nav>
+        <ul class="pagination" id="pagination">
+            <!-- Sayfa numaraları burada oluşturulacak -->
+        </ul>
+    </nav>
+</div>
+
+@section Scripts {
+    <script>
+        // Global değişkenler
+        let pageIndex = 0;
+        const pageSize = 14;
+        let totalPages = 1;
+
+        // API'den verileri çeken fonksiyon
+        async function loadLogs() {
+            const searchQuery = document.getElementById("searchQuery").value;
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+
+            // URL parametrelerini ekliyoruz.
+            let apiUrl = `/WTPartLogs/GetLogs?pageIndex=${pageIndex}&pageSize=${pageSize}`;
+            if (searchQuery)
+                apiUrl += `&searchQuery=${encodeURIComponent(searchQuery)}`;
+            if (startDate)
+                apiUrl += `&startDate=${startDate}`;
+            if (endDate)
+                apiUrl += `&endDate=${endDate}`;
+
+            console.log("Fetching URL:", apiUrl);
+
+            // Sayfa yüklenirken Metronic loader'ı göster
+            KTApp.showPageLoading();
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                console.log("Received data:", data);
+
+                // API'den 'pages' döndürülüyorsa onu kullan, yoksa 'count' üzerinden hesapla.
+                if (typeof data.pages !== "undefined") {
+                    totalPages = data.pages;
+                } else if (typeof data.count !== "undefined") {
+                    totalPages = Math.ceil(data.count / pageSize);
+                } else {
+                    totalPages = 1;
+                }
+
+                const tableBody = document.getElementById("logsTableBody");
+                tableBody.innerHTML = "";
+
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach((log, index) => {
+                        const rowNumber = index + 1 + (pageIndex * pageSize);
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${rowNumber}</td>
+                                <td>${log.parcaName}</td>
+                                <td>${log.parcaNumber}</td>
+                                <td>${log.kulAd}</td>
+                                <td>${log.actionType || "N/A"}</td>
+                                <td>${log.logDate ? new Date(log.logDate).toLocaleString() : "-"}</td>
+                                <td>${log.logMesaj}</td>
+                            </tr>`;
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center">Kayıt bulunamadı</td></tr>`;
+                }
+
+                updatePagination();
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                // Veriler geldikten (veya hata oluşsa bile) loader'ı gizle
+                KTApp.hidePageLoading();
+            }
+        }
+
+        // Filtre butonuna tıklandığında sayfa indeksini sıfırlayıp loadLogs() çalıştıran fonksiyon
+        function filterLogs() {
+            pageIndex = 0;
+            loadLogs();
+        }
+
+        // Sayfa değiştirme işlemini yapan fonksiyon
+        function changePage(newIndex) {
+            if (newIndex < 0 || newIndex >= totalPages) return;
+            pageIndex = newIndex;
+            loadLogs();
+        }
+
+        // Sayfalama elementlerini güncelleyen fonksiyon
+        function updatePagination() {
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            // Önceki butonu
+            pagination.innerHTML += `<li class="page-item ${pageIndex === 0 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${pageIndex - 1}); return false;">Önceki</a>
+            </li>`;
+
+            // Sadece 5 sayfa numarası gösterecek şekilde hesaplama
+            const maxPagesToShow = 5;
+            let startPage = Math.max(0, pageIndex - Math.floor(maxPagesToShow / 2));
+            let endPage = startPage + maxPagesToShow - 1;
+            if (endPage >= totalPages) {
+                endPage = totalPages - 1;
+                startPage = Math.max(0, endPage - maxPagesToShow + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagination.innerHTML += `<li class="page-item ${i === pageIndex ? "active" : ""}">
+                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i + 1}</a>
+                </li>`;
+            }
+
+            // Sonraki butonu
+            pagination.innerHTML += `<li class="page-item ${pageIndex === totalPages - 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${pageIndex + 1}); return false;">Sonraki</a>
+            </li>`;
+        }
+
+        // Sayfa yüklendiğinde ilk verileri çek
+        document.addEventListener("DOMContentLoaded", () => {
+            loadLogs();
+        });
+    </script>
+}
