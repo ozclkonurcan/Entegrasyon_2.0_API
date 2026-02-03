@@ -136,6 +136,8 @@ public static class PersistenceServiceRegistration
 		services.AddScoped<IWindchillConnectionService, WindchillConnectionRepository>();
 		services.AddScoped<IIntegrationSettingsService, IntegrationSettingsRepository>();
 
+		//services.AddScoped<IEPMDocumentEquivalenceService, EPMDocumentEquivalenceManager>();
+
 		services.AddScoped<IApiClientService, ApiClientService>();
 		services.AddScoped<IEmailService, EmailService>();
 		services.AddScoped<INotificationService, NotificationService>();

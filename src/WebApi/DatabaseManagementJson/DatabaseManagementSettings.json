@@ -221,6 +221,71 @@
       "Triggers": []
     },
     {
+      "TableTitle": "EPMDocument Equivalence",
+      "TableName": "Des2_EPMDocument_Equivalence",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Equivalence ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [MainObjectState] [nvarchar](200) NULL, [MainObjectVersion] [nvarchar](50) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [RelatedObjectState] [nvarchar](200) NULL, [RelatedObjectVersion] [nvarchar](50) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL )",
+      "IsActive": true,
+      "Triggers": [
+        {
+          "TriggerName": "Des2_EPM_Equivalence_IntegrationControl",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Des2_EPM_Equivalence_IntegrationControl] ON {schema}.[Des2_EPMDocument_Equivalence] AFTER INSERT, UPDATE AS BEGIN SET NOCOUNT ON; UPDATE T SET EntegrasyonDurum = CASE WHEN (I.MainObjectState = 'RELEASED' AND I.RelatedObjectState = 'RELEASED') THEN 1 ELSE 0 END FROM {schema}.[Des2_EPMDocument_Equivalence] T INNER JOIN INSERTED I ON T.Ent_ID = I.Ent_ID; END"
+        },
+        {
+          "TriggerName": "Des2_EPM_Equivalence_ErrorClean",
+          "CreateQuery": "CREATE TRIGGER {schema}.[Des2_EPM_Equivalence_ErrorClean] ON {schema}.[Des2_EPMDocument_Equivalence] AFTER INSERT AS BEGIN SET NOCOUNT ON; DELETE FROM {schema}.[Des2_EPMDocument_Equivalence_Error] WHERE LinkID IN (SELECT LinkID FROM INSERTED); END"
+        }
+      ]
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Log",
+      "TableName": "Des2_EPMDocument_Equivalence_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Equivalence_Log ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL, [ActionType] [nvarchar](50) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Sent",
+      "TableName": "Des2_EPMDocument_Equivalence_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Equivalence_Sent ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Error",
+      "TableName": "Des2_EPMDocument_Equivalence_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_Equivalence_Error ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL, [RetryCount] INT NOT NULL DEFAULT 0, [LastRetryDate] DATETIME NULL, [ActionType] [nvarchar](50) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Removed",
+      "TableName": "Des2_EPMDocument_EquivalenceRemoved",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_EquivalenceRemoved ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [MainObjectState] [nvarchar](200) NULL, [MainObjectVersion] [nvarchar](50) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [RelatedObjectState] [nvarchar](200) NULL, [RelatedObjectVersion] [nvarchar](50) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Removed Log",
+      "TableName": "Des2_EPMDocument_EquivalenceRemoved_Log",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_EquivalenceRemoved_Log ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL, [ActionType] [nvarchar](50) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Removed Sent",
+      "TableName": "Des2_EPMDocument_EquivalenceRemoved_Sent",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_EquivalenceRemoved_Sent ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
+      "TableTitle": "EPMDocument Equivalence Removed Error",
+      "TableName": "Des2_EPMDocument_EquivalenceRemoved_Error",
+      "CreateQuery": "CREATE TABLE {schema}.Des2_EPMDocument_EquivalenceRemoved_Error ( [Ent_ID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY, [MainObjectID] [bigint] NULL, [MainObjectNumber] [nvarchar](200) NULL, [MainObjectName] [nvarchar](200) NULL, [RelatedObjectID] [bigint] NULL, [RelatedObjectNumber] [nvarchar](200) NULL, [RelatedObjectName] [nvarchar](200) NULL, [LinkID] [bigint] NULL, [LogDate] [datetime] DEFAULT GETDATE(), [EntegrasyonDurum] [tinyint] NULL, [LogMesaj] [nvarchar](MAX) NULL, [RetryCount] INT NOT NULL DEFAULT 0, [LastRetryDate] DATETIME NULL, [ActionType] [nvarchar](50) NULL )",
+      "IsActive": true,
+      "Triggers": []
+    },
+    {
       "TableTitle": "Pending Operations",
       "TableName": "Des2_YapilacakIslem",
       "CreateQuery": "CREATE TABLE {schema}.Des2_YapilacakIslem (ID INT PRIMARY KEY IDENTITY, RoIAdi NVARCHAR(MAX), KaynakAdresID INT, YapilacakIslemID INT, ApiURL NVARCHAR(MAX), ApiAnaKaynak NVARCHAR(MAX), ApiEndPoint NVARCHAR(MAX), Durum TINYINT)",

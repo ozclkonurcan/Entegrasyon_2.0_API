@@ -143,6 +143,7 @@ public class DatabaseManagementRepository : IDatabaseManagementService
 		return $"{tables.Count} tablonun kurulumu başarıyla tamamlandı.";
 	}
 
+
 	public async Task CreateTriggersAsync(DatabaseManagementDefinations tableDefinition, string connectionFullURL, string schema)
 	{
 		try
@@ -153,37 +154,93 @@ public class DatabaseManagementRepository : IDatabaseManagementService
 
 				foreach (var trigger in tableDefinition.Triggers)
 				{
-					trigger.CreateQuery = trigger.CreateQuery.Replace("{schema}", schema);
+					// 1. GÖRÜNMEZ KARAKTER TEMİZLİĞİ (CRITICAL)
+					// JSON'dan gelen string içinde (char)160 (non-breaking space) olabilir.
+					// Bu karakter SQL'de syntax hatasına yol açar.
+					string rawQuery = trigger.CreateQuery
+										.Replace((char)160, ' ')  // Görünmez boşlukları normal boşluğa çevir
+										.Trim();                  // Baş ve sondaki boşlukları al
 
-					var cleanedTriggerQuery = trigger.CreateQuery
-						.Replace("\r", " ")
-						.Replace("\n", " ")
-						.Replace("  ", " ");
+					// {schema} alanlarını doldur
+					var createScript = rawQuery.Replace("{schema}", schema);
 
-					var triggerExistsQuery = $@"
-                IF NOT EXISTS (SELECT * FROM sys.triggers WHERE name = '{trigger.TriggerName}' AND parent_id = OBJECT_ID('{schema}.{tableDefinition.TableName}'))
-                BEGIN
-                    EXEC('{cleanedTriggerQuery.Replace("'", "''")}');
-                END";
+					// 2. TRIGGER VARSA SİL (Modern Yöntem)
+					// 'IF OBJECT_ID' bloğu yerine SQL Server 2016+ için desteklenen temiz syntax.
+					// Eğer SQL Server sürümünüz çok eskiyse (2014 ve öncesi) haber verin, eski yönteme dönelim.
+					var dropScript = $"DROP TRIGGER IF EXISTS {schema}.[{trigger.TriggerName}]";
 
-					using (var triggerCommand = new SqlCommand(triggerExistsQuery, connection))
+					// Önce DROP komutunu çalıştır
+					using (var dropCommand = new SqlCommand(dropScript, connection))
 					{
-						await triggerCommand.ExecuteNonQueryAsync();
+						await dropCommand.ExecuteNonQueryAsync();
+					}
+
+					// 3. TRIGGER OLUŞTUR (CREATE)
+					// CREATE TRIGGER komutu kendi başına (batch olarak) çalışmalıdır.
+					using (var createCommand = new SqlCommand(createScript, connection))
+					{
+						await createCommand.ExecuteNonQueryAsync();
 					}
 				}
 			}
 		}
 		catch (SqlException sqlEx)
 		{
-			Console.WriteLine($"SQL Hatası: {sqlEx.Message}");
-			throw new Exception("Tetikleyici oluşturulurken bir SQL hatası oluştu.", sqlEx);
+			// Hangi trigger'da hata aldığımızı görmek için hata mesajını detaylandırıyoruz.
+			// Hata muhtemelen JSON içindeki SQL kodunun kendisindedir.
+			var msg = $"SQL Hatası (Trigger: {tableDefinition.TableName}): {sqlEx.Message} - Hata Kodu: {sqlEx.Number}";
+			Console.WriteLine(msg);
+			throw new Exception(msg, sqlEx);
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Hata: {ex.Message}");
-			throw new Exception("Tetikleyici oluşturulurken bir hata oluştu.", ex);
+			Console.WriteLine($"Genel Hata: {ex.Message}");
+			throw new Exception($"Tetikleyici oluşturulurken hata: {ex.Message}", ex);
 		}
 	}
+
+	//Eski 03.02.2026 11:43
+	//public async Task CreateTriggersAsync(DatabaseManagementDefinations tableDefinition, string connectionFullURL, string schema)
+	//{
+	//	try
+	//	{
+	//		using (var connection = new SqlConnection(connectionFullURL))
+	//		{
+	//			await connection.OpenAsync();
+
+	//			foreach (var trigger in tableDefinition.Triggers)
+	//			{
+	//				trigger.CreateQuery = trigger.CreateQuery.Replace("{schema}", schema);
+
+	//				var cleanedTriggerQuery = trigger.CreateQuery
+	//					.Replace("\r", " ")
+	//					.Replace("\n", " ")
+	//					.Replace("  ", " ");
+
+	//				var triggerExistsQuery = $@"
+	//               IF NOT EXISTS (SELECT * FROM sys.triggers WHERE name = '{trigger.TriggerName}' AND parent_id = OBJECT_ID('{schema}.{tableDefinition.TableName}'))
+	//               BEGIN
+	//                   EXEC('{cleanedTriggerQuery.Replace("'", "''")}');
+	//               END";
+
+	//				using (var triggerCommand = new SqlCommand(triggerExistsQuery, connection))
+	//				{
+	//					await triggerCommand.ExecuteNonQueryAsync();
+	//				}
+	//			}
+	//		}
+	//	}
+	//	catch (SqlException sqlEx)
+	//	{
+	//		Console.WriteLine($"SQL Hatası: {sqlEx.Message}");
+	//		throw new Exception("Tetikleyici oluşturulurken bir SQL hatası oluştu.", sqlEx);
+	//	}
+	//	catch (Exception ex)
+	//	{
+	//		Console.WriteLine($"Hata: {ex.Message}");
+	//		throw new Exception("Tetikleyici oluşturulurken bir hata oluştu.", ex);
+	//	}
+	//}
 
 
 	public async Task CreateTableAsync(DatabaseManagementDefinations tableDefinition, string connectionFullURL, string schema)

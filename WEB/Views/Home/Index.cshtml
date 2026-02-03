@@ -1,5 +1,544 @@
 ﻿@model WEB.Models.WTPartIntegrationIndexViewModel
 @{
+    ViewData["Title"] = "Entegrasyon Paneli";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <div class="container-xxl" id="kt_content_container">
+
+        <div class="d-flex flex-column flex-lg-row align-items-center justify-content-between mb-10">
+            <div>
+                <h1 class="d-flex text-dark fw-bolder fs-3 align-items-center my-1">
+                    Entegrasyon Durum Paneli
+                    <span class="badge badge-light-success fw-bold fs-7 ms-2 px-3 py-1">Canlı</span>
+                </h1>
+                <span class="text-gray-400 mt-1 fw-bold fs-7">Windchill & ERP Entegrasyon Süreçleri</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                <span class="text-muted fs-7 fw-bold me-2">Son Güncelleme: <span id="lastUpdateTime" class="text-primary">@DateTime.Now.ToString("HH:mm:ss")</span></span>
+                <a href="javascript:location.reload();" class="btn btn-sm btn-light btn-active-primary">
+                    <i class="fas fa-sync-alt"></i> Yenile
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-5 g-xl-8 mb-10">
+            <div class="col-xl-4">
+                <div class="card card-xl-stretch mb-xl-8 bg-body border-0 shadow-sm">
+                    <div class="card-body d-flex align-items-center pt-3 pb-0">
+                        <div class="d-flex flex-column flex-grow-1 py-2 py-lg-13 me-2">
+                            <a href="#" class="fw-bolder text-dark fs-4 mb-2 text-hover-primary">Toplam İşlem</a>
+                            <span class="fw-bold text-muted fs-5">Anlık Yük</span>
+                        </div>
+                        <div class="symbol symbol-50px symbol-light-primary me-4">
+                            <span class="symbol-label">
+                                <i class="fas fa-layer-group fs-2x text-primary"></i>
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                            <span class="text-dark fw-bolder fs-2x" id="totalIntegrationCount">0</span>
+                            <span class="text-success fw-bold fs-7" id="totalTrend">+0% <i class="fas fa-arrow-up fs-9 text-success"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card card-xl-stretch mb-xl-8 bg-body border-0 shadow-sm">
+                    <div class="card-body d-flex align-items-center pt-3 pb-0">
+                        <div class="d-flex flex-column flex-grow-1 py-2 py-lg-13 me-2">
+                            <a href="#" class="fw-bolder text-dark fs-4 mb-2 text-hover-warning">Bekleyen</a>
+                            <span class="fw-bold text-muted fs-5">Kuyruktaki İşler</span>
+                        </div>
+                        <div class="symbol symbol-50px symbol-light-warning me-4">
+                            <span class="symbol-label">
+                                <i class="fas fa-hourglass-half fs-2x text-warning"></i>
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                            <span class="text-dark fw-bolder fs-2x" id="pendingOperationsCount">0</span>
+                            <span class="text-warning fw-bold fs-7" id="pendingTrend">Stabil</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card card-xl-stretch mb-xl-8 bg-body border-0 shadow-sm">
+                    <div class="card-body d-flex align-items-center pt-3 pb-0">
+                        <div class="d-flex flex-column flex-grow-1 py-2 py-lg-13 me-2">
+                            <a href="#" class="fw-bolder text-dark fs-4 mb-2 text-hover-success">Başarılı</a>
+                            <span class="fw-bold text-muted fs-5">Tamamlanan</span>
+                        </div>
+                        <div class="symbol symbol-50px symbol-light-success me-4">
+                            <span class="symbol-label">
+                                <i class="fas fa-check-circle fs-2x text-success"></i>
+                            </span>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                            <span class="text-dark fw-bolder fs-2x" id="successfulOperationsCount">0</span>
+                            <span class="text-success fw-bold fs-7" id="successTrend">Aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5 g-xl-8 mb-5">
+            <div class="col-xl-6">
+                <div class="card card-flush h-100 shadow-sm">
+                    <div class="card-header pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bolder text-dark">Genel Dağılım</span>
+                            <span class="text-gray-400 mt-1 fw-bold fs-7">İşlem durumlarına göre dağılım</span>
+                        </h3>
+                    </div>
+                    <div class="card-body pt-0 px-5">
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="generalStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="card card-flush h-100 shadow-sm">
+                    <div class="card-header pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bolder text-dark">WTPart Detayları</span>
+                            <span class="text-gray-400 mt-1 fw-bold fs-7">WTPart modülü işlem kırılımı</span>
+                        </h3>
+                    </div>
+                    <div class="card-body pt-0 px-5">
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="wtpartStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap flex-stack mb-6">
+            <h3 class="fw-bolder my-2">WTPart Entegrasyonları</h3>
+        </div>
+
+        <div class="row g-6 g-xl-9 mb-10">
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-success">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Released</div>
+                            <i class="fas fa-check text-success fs-2"></i>
+                        </div>
+
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="releasedNotSentCount">@Model.ReleasedNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="releasedSentCount">@Model.ReleasedSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="releasedErrorCount">@Model.ReleasedErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-danger">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Cancelled</div>
+                            <i class="fas fa-ban text-danger fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="cancelledNotSentCount">@Model.CancelledNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="cancelledSentCount">@Model.CancelledSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="cancelledErrorCount">@Model.CancelledErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-primary">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Aktif Muadiller</div>
+                            <i class="fas fa-link text-primary fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="alternateLinkNotSentCount">@Model.WtpartAlternateCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="alternateLinkSentCount">@Model.WtpartAlternateSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="alternateLinkErrorCount">@Model.WtpartAlternateErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-warning">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Silinen Muadiller</div>
+                            <i class="fas fa-unlink text-warning fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="alternateLinkRemovedNotSentCount">@Model.WtpartAlternateRemovedCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="alternateLinkRemovedSentCount">@Model.WtpartAlternateRemovedSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="alternateLinkRemovedErrorCount">@Model.WtpartAlternateRemovedErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap flex-stack mb-6">
+            <h3 class="fw-bolder my-2">EPMDocument Entegrasyonları</h3>
+        </div>
+
+        <div class="row g-6 g-xl-9 mb-10">
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-success">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Released</div>
+                            <i class="fas fa-file-check text-success fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="epmReleasedNotSentCount">@Model.EpmReleasedNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="epmReleasedSentCount">@Model.EpmReleasedSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="epmReleasedErrorCount">@Model.EpmReleasedErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-danger">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Cancelled</div>
+                            <i class="fas fa-file-excel text-danger fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="epmCancelledNotSentCount">@Model.EpmCancelledNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="epmCancelledSentCount">@Model.EpmCancelledSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="epmCancelledErrorCount">@Model.EpmCancelledErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-info">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Aktif Eşdeğerler</div>
+                            <i class="fas fa-equals text-info fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="equivalenceLinkNotSentCount">@Model.EquivalenceLinkNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="equivalenceLinkSentCount">@Model.EquivalenceLinkSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="equivalenceLinkTotalCount">@Model.EquivalenceLinkErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card card-flush h-md-100 shadow-sm border-top border-4 border-warning">
+                    <div class="card-body pt-5">
+                        <div class="d-flex flex-stack">
+                            <div class="text-gray-700 fw-bold fs-6">Silinen Eşdeğerler</div>
+                            <i class="fas fa-not-equal text-warning fs-2"></i>
+                        </div>
+                        <div class="d-flex align-items-center flex-column mt-3">
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Bekleyen</span>
+                                <span class="fw-bolder fs-6 text-warning" id="equivalenceLinkRemovedNotSentCount">@Model.EquivalenceLinkRemovedNotSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto mb-2">
+                                <span class="fw-bold fs-6 text-gray-400">Gönderilen</span>
+                                <span class="fw-bolder fs-6 text-success" id="equivalenceLinkRemovedSentCount">@Model.EquivalenceLinkRemovedSentCount</span>
+                            </div>
+                            <div class="d-flex justify-content-between w-100 mt-auto">
+                                <span class="fw-bold fs-6 text-gray-400">Hatalı</span>
+                                <span class="fw-bolder fs-6 text-danger" id="equivalenceLinkRemovedTotalCount">@Model.EquivalenceLinkRemovedErrorCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+    <script>
+        let generalChart, wtpartChart, realTimeChart;
+        let isChartsInitialized = false;
+
+        // SAFE VALUE FUNCTION (HATA ÖNLEYİCİ)
+        // Bu fonksiyon, element sayfada yoksa hata vermek yerine 0 döndürür.
+        function getValue(id) {
+            const el = document.getElementById(id);
+            if (!el) {
+                //console.warn(`Element bulunamadı: ${id}`); // Geliştirme aşamasında açılabilir
+                return 0;
+            }
+            return parseInt(el.textContent) || 0;
+        }
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/wTPartHub')
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start()
+            .then(() => console.log("SignalR Bağlandı"))
+            .catch(err => console.error("SignalR Hatası:", err));
+
+        // ---------------------------------------------------------
+        // CHART BAŞLATMA
+        // ---------------------------------------------------------
+        function initializeCharts() {
+            try {
+                // 1. Genel Durum
+                const generalCtx = document.getElementById('generalStatusChart')?.getContext('2d');
+                if (generalCtx) {
+                    generalChart = new Chart(generalCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Bekleyen', 'Başarılı', 'Hatalı'],
+                            datasets: [{
+                                data: [0, 0, 0],
+                                backgroundColor: ['#ffc700', '#50cd89', '#f1416c'],
+                                borderWidth: 0,
+                                hoverOffset: 5
+                            }]
+                        },
+                        options: { cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+
+                // 2. WTPart Detay
+                const wtpartCtx = document.getElementById('wtpartStatusChart')?.getContext('2d');
+                if (wtpartCtx) {
+                    wtpartChart = new Chart(wtpartCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['WTPart Rel', 'WTPart Can', 'EPM Rel', 'EPM Can'],
+                            datasets: [
+                                { label: 'Bekleyen', data: [0,0,0,0], backgroundColor: '#ffc700', borderRadius: 3 },
+                                { label: 'Gönderilen', data: [0,0,0,0], backgroundColor: '#50cd89', borderRadius: 3 },
+                                { label: 'Hatalı', data: [0,0,0,0], backgroundColor: '#f1416c', borderRadius: 3 }
+                            ]
+                        },
+                        options: { scales: { x: { stacked: true }, y: { stacked: true } } }
+                    });
+                }
+
+                isChartsInitialized = true;
+                updateSummaryNumbers(); // İlk yüklemede çalıştır
+
+            } catch (e) {
+                console.error("Chart başlatma hatası:", e);
+            }
+        }
+
+        // ---------------------------------------------------------
+        // VERİLERİ TOPLA VE GÜNCELLE
+        // ---------------------------------------------------------
+        function updateSummaryNumbers() {
+            try {
+                // WTPart
+                const wpPending = getValue("releasedNotSentCount");
+                const wpSent = getValue("releasedSentCount");
+                const wpErr = getValue("releasedErrorCount");
+
+                const wpCanPending = getValue("cancelledNotSentCount");
+                const wpCanSent = getValue("cancelledSentCount");
+                const wpCanErr = getValue("cancelledErrorCount");
+
+                // Alternate
+                const altPending = getValue("alternateLinkNotSentCount");
+                const altSent = getValue("alternateLinkSentCount");
+                const altErr = getValue("alternateLinkErrorCount");
+
+                const altRemPending = getValue("alternateLinkRemovedNotSentCount");
+                const altRemSent = getValue("alternateLinkRemovedSentCount");
+                const altRemErr = getValue("alternateLinkRemovedErrorCount");
+
+                // EPMDocument (GÜVENLİ ERİŞİM)
+                const epmPending = getValue("epmReleasedNotSentCount");
+                const epmSent = getValue("epmReleasedSentCount");
+                const epmErr = getValue("epmReleasedErrorCount");
+
+                const epmCanPending = getValue("epmCancelledNotSentCount");
+                const epmCanSent = getValue("epmCancelledSentCount");
+                const epmCanErr = getValue("epmCancelledErrorCount");
+
+                // Equivalence
+                const eqPending = getValue("equivalenceLinkNotSentCount");
+                const eqSent = getValue("equivalenceLinkSentCount");
+                const eqErr = getValue("equivalenceLinkTotalCount");
+
+                const eqRemPending = getValue("equivalenceLinkRemovedNotSentCount");
+                const eqRemSent = getValue("equivalenceLinkRemovedSentCount");
+                const eqRemErr = getValue("equivalenceLinkRemovedTotalCount");
+
+                // --- HESAPLAMALAR ---
+                const totalPending = wpPending + wpCanPending + altPending + altRemPending + epmPending + epmCanPending + eqPending + eqRemPending;
+                const totalSuccess = wpSent + wpCanSent + altSent + altRemSent + epmSent + epmCanSent + eqSent + eqRemSent;
+                const totalError = wpErr + wpCanErr + altErr + altRemErr + epmErr + epmCanErr + eqErr + eqRemErr;
+                const totalOps = totalPending + totalSuccess + totalError;
+
+                // --- DOM GÜNCELLEME ---
+                document.getElementById("totalIntegrationCount").textContent = totalOps;
+                document.getElementById("pendingOperationsCount").textContent = totalPending;
+                document.getElementById("successfulOperationsCount").textContent = totalSuccess;
+                document.getElementById("lastUpdateTime").textContent = new Date().toLocaleTimeString();
+
+                // --- CHART GÜNCELLEME ---
+                if (isChartsInitialized) {
+                    // Genel Pasta
+                    if(generalChart) {
+                        generalChart.data.datasets[0].data = [totalPending, totalSuccess, totalError];
+                        generalChart.update();
+                    }
+
+                    // Detay Bar (WTPart ve EPM Karşılaştırma)
+                    if(wtpartChart) {
+                        // Released, Cancelled, EPM Rel, EPM Can
+                        wtpartChart.data.datasets[0].data = [wpPending, wpCanPending, epmPending, epmCanPending];
+                        wtpartChart.data.datasets[1].data = [wpSent, wpCanSent, epmSent, epmCanSent];
+                        wtpartChart.data.datasets[2].data = [wpErr, wpCanErr, epmErr, epmCanErr];
+                        wtpartChart.update();
+                    }
+                }
+
+            } catch (error) {
+                console.error("Veri güncelleme hatası:", error);
+            }
+        }
+
+        // ---------------------------------------------------------
+        // SIGNALR LISTENERS
+        // ---------------------------------------------------------
+        connection.on("ReceiveWTPartUpdates", (p, s, cp, cs, e, ce) => {
+            setText("releasedNotSentCount", p); setText("releasedSentCount", s);
+            setText("cancelledNotSentCount", cp); setText("cancelledSentCount", cs);
+            setText("releasedErrorCount", e); setText("cancelledErrorCount", ce);
+            updateSummaryNumbers();
+        });
+
+        connection.on("ReceiveAlternateLinkUpdates", (p, s, rp, rs, e, re) => {
+            setText("alternateLinkNotSentCount", p); setText("alternateLinkSentCount", s);
+            setText("alternateLinkRemovedNotSentCount", rp); setText("alternateLinkRemovedSentCount", rs);
+            setText("alternateLinkErrorCount", e); setText("alternateLinkRemovedErrorCount", re);
+            updateSummaryNumbers();
+        });
+
+        connection.on("ReceiveEPMDocumentUpdates", (p, s, cp, cs, e, ce) => {
+            setText("epmReleasedNotSentCount", p); setText("epmReleasedSentCount", s);
+            setText("epmCancelledNotSentCount", cp); setText("epmCancelledSentCount", cs);
+            setText("epmReleasedErrorCount", e); setText("epmCancelledErrorCount", ce);
+            updateSummaryNumbers();
+        });
+
+        connection.on("ReceiveEquivalenceLinkUpdates", (p, s, t, rp, rs, re) => {
+            // Equivalence placeholder
+            updateSummaryNumbers();
+        });
+
+        // Helper: ID varsa text güncelle
+        function setText(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val ?? 0;
+        }
+
+        // Periyodik Push Trigger
+        setInterval(() => {
+            fetch('/Home/PushIntegrationSummary', { method: 'POST' }).catch(console.error);
+        }, 5000);
+
+        // Başlat
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(initializeCharts, 500);
+        });
+
+    </script>
+}
+
+
+
+
+@* @model WEB.Models.WTPartIntegrationIndexViewModel
+@{
     ViewData["Title"] = "Entegrasyon Durumları";
 }
 
@@ -932,512 +1471,4 @@
     </script>
 }
 
-
-@* @model WEB.Models.WTPartIntegrationIndexViewModel
-@{
-    ViewData["Title"] = "Entegrasyon Durumları";
-}
-
-<div class="container-fluid py-4">
-    <!-- Başlık ve Açıklama -->
-    <div class="card card-custom gutter-b shadow-sm mb-5">
-        <div class="card-body d-flex flex-column p-4">
-            <div class="text-center mb-2">
-                <h1 class="fs-2x fw-bolder text-dark mb-0">Entegrasyon Durumları</h1>
-                <span class="text-muted fs-6">Sistem entegrasyon durumlarının anlık görünümü</span>
-            </div>
-            <div class="d-flex justify-content-end">
-                <span class="badge badge-light-primary fs-7">
-                    <i class="fas fa-sync-alt me-1"></i> Son güncelleme: 29.04.2025 10:15
-                </span>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Özet İstatistikler -->
-    <div class="row g-5">
-        <div class="col-12">
-            <h2 class="fs-1 fw-bold text-dark ">
-                <i class="fas fa-chart-pie me-2 text-primary"></i>Genel Durum
-            </h2>
-        </div>
-
-        <!-- Toplam Entegrasyon Kartı -->
-        <div class="col-md-6 col-xl-4">
-            <div class="card card-custom bg-light-info shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="symbol symbol-50px me-4">
-                            <div class="symbol-label bg-info">
-                                <i class="fas fa-exchange-alt fs-1 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="fs-4 text-dark fw-bolder">Toplam Entegrasyon</div>
-                            <div class="fs-1 fw-boldest text-info">
-                                <span id="totalIntegrationCount">0</span>
-                            </div>
-                            <div class="text-muted fs-7">Tüm entegrasyon işlemleri</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bekleyen İşlemler Kartı -->
-        <div class="col-md-6 col-xl-4">
-            <div class="card card-custom bg-light-warning shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="symbol symbol-50px me-4">
-                            <div class="symbol-label bg-warning">
-                                <i class="fas fa-clock fs-1 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="fs-4 text-dark fw-bolder">Bekleyen İşlemler</div>
-                            <div class="fs-1 fw-boldest text-warning">
-                                <span id="pendingOperationsCount">0</span>
-                            </div>
-                            <div class="text-muted fs-7">Gönderilmeyi bekleyen işlemler</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Başarılı İşlemler Kartı -->
-        <div class="col-md-6 col-xl-4">
-            <div class="card card-custom bg-light-success shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="symbol symbol-50px me-4">
-                            <div class="symbol-label bg-success">
-                                <i class="fas fa-check-double fs-1 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="fs-4 text-dark fw-bolder">Başarılı İşlemler</div>
-                            <div class="fs-1 fw-boldest text-success">
-                                <span id="successfulOperationsCount">0</span>
-                            </div>
-                            <div class="text-muted fs-7">Başarıyla tamamlanan işlemler</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- WTPart Bölümü -->
-    <div class="row g-5 mt-5">
-        <div class="col-12">
-            <h2 class="fs-1 fw-bold text-dark mb-4">
-                <i class="fas fa-cogs me-2 text-primary"></i>WTPart Entegrasyonları
-            </h2>
-        </div>
-
-        <!-- Released Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-success shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-success">
-                                <i class="fas fa-check-circle fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
-                            <span class="text-muted fs-7">Onaylanmış Parçalar</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="releasedNotSentCount" class="badge badge-success fs-5 fw-bolder">@Model.ReleasedNotSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="releasedSentCount" class="badge badge-light-success fs-5 fw-bolder">@Model.ReleasedSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="releasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.ReleasedErrorCount</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cancelled Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-danger shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-danger">
-                                <i class="fas fa-ban fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
-                            <span class="text-muted fs-7">İptal Edilmiş Parçalar</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="cancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">@Model.CancelledNotSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="cancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">@Model.CancelledSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="cancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.CancelledErrorCount</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aktif Muadil İlişkileri Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-primary shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-primary">
-                                <i class="fas fa-link fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Muadiller</h3>
-                            <span class="text-muted fs-7">Alternatif Parça İlişkileri</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="alternateLinkNotSentCount" class="badge badge-primary fs-5 fw-bolder">@Model.WtpartAlternateCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="alternateLinkSentCount" class="badge badge-light-primary fs-5 fw-bolder">@Model.WtpartAlternateSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="alternateLinkErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateErrorCount</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Silinen Muadil İlişkileri Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-warning shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-warning">
-                                <i class="fas fa-unlink fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Muadiller</h3>
-                            <span class="text-muted fs-7">Kaldırılmış Alternatif İlişkiler</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="alternateLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="alternateLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">@Model.WtpartAlternateRemovedSentCount</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="alternateLinkRemovedErrorCount" class="badge badge-light-info fs-5 fw-bolder">@Model.WtpartAlternateRemovedErrorCount</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- EPMDocument Bölümü -->
-    <div class="row g-5 mt-5">
-        <div class="col-12">
-            <h2 class="fs-1 fw-bold text-dark mb-4">
-                <i class="fas fa-file-alt me-2 text-info"></i>EPMDocument Entegrasyonları
-            </h2>
-        </div>
-
-        <!-- EPM Released Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-success shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-success">
-                                <i class="fas fa-file-check fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Released</h3>
-                            <span class="text-muted fs-7">Onaylanmış Dokümanlar</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="epmReleasedNotSentCount" class="badge badge-success fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="epmReleasedSentCount" class="badge badge-light-success fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="epmReleasedErrorCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- EPM Cancelled Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-danger shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-danger">
-                                <i class="fas fa-file-excel fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Cancelled</h3>
-                            <span class="text-muted fs-7">İptal Edilmiş Dokümanlar</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="epmCancelledNotSentCount" class="badge badge-danger fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="epmCancelledSentCount" class="badge badge-light-danger fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="epmCancelledErrorCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aktif Eşdeğer İlişkileri Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-info shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-info">
-                                <i class="fas fa-equals fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Aktif Eşdeğerler</h3>
-                            <span class="text-muted fs-7">Eşdeğer Doküman İlişkileri</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="equivalenceLinkNotSentCount" class="badge badge-info fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="equivalenceLinkSentCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="equivalenceLinkTotalCount" class="badge badge-light-primary fs-5 fw-bolder">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Silinen Eşdeğer İlişkileri Kartı -->
-        <div class="col-md-6 col-xl-3">
-            <div class="card card-custom bg-light-warning shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="symbol symbol-40px me-3">
-                            <div class="symbol-label bg-warning">
-                                <i class="fas fa-not-equal fs-2 text-white"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="fs-4 fw-bolder text-dark mb-0">Silinen Eşdeğerler</h3>
-                            <span class="text-muted fs-7">Kaldırılmış Eşdeğer İlişkiler</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmemiş</span>
-                            <span id="equivalenceLinkRemovedNotSentCount" class="badge badge-warning fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-dark fs-6 fw-bold">Gönderilmiş</span>
-                            <span id="equivalenceLinkRemovedSentCount" class="badge badge-light-warning fs-5 fw-bolder">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fs-6 fw-bold">Hatalı</span>
-                            <span id="equivalenceLinkRemovedTotalCount" class="badge badge-light-info fs-5 fw-bolder">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-</div>
-
-@section Scripts {
-    <!-- SignalR client kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js" integrity="sha512-..." crossorigin="anonymous"></script>
-    <!-- Font Awesome -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" integrity="sha512-..." crossorigin="anonymous"></script>
-    <script>
-        // SignalR bağlantısını oluşturuyoruz
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl('/wTPartHub')
-            .build();
-
-        connection.start()
-            .then(() => console.log("SignalR bağlantısı başarılı!"))
-            .catch(err => console.error("SignalR bağlantı hatası: ", err));
-
-        // WTPart güncellemelerini dinliyoruz
-        connection.on("ReceiveWTPartUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
-            document.getElementById("releasedNotSentCount").textContent = releasedNotSentCount;
-            document.getElementById("releasedSentCount").textContent = releasedSentCount;
-            document.getElementById("cancelledNotSentCount").textContent = cancelledNotSentCount;
-            document.getElementById("cancelledSentCount").textContent = cancelledSentCount;
-            document.getElementById("releasedErrorCount").textContent = releasedErrorCount ?? "-";
-            document.getElementById("cancelledErrorCount").textContent = cancelledErrorCount ?? "-";
-
-            // Genel durum sayılarını güncelle
-            updateSummaryNumbers();
-        });
-
-    
-                // AlternateLink güncellemelerini dinliyoruz
-        connection.on("ReceiveAlternateLinkUpdates", (notSentCount, sentCount, removedNotSentCount, removedSentCount, errorCount, removedErrorCount) => {
-            document.getElementById("alternateLinkNotSentCount").textContent = notSentCount;
-            document.getElementById("alternateLinkSentCount").textContent = sentCount;
-            document.getElementById("alternateLinkErrorCount").textContent = errorCount; // Hata sayısını burada kullanıyoruz
-            document.getElementById("alternateLinkRemovedNotSentCount").textContent = removedNotSentCount;
-            document.getElementById("alternateLinkRemovedSentCount").textContent = removedSentCount;
-            document.getElementById("alternateLinkRemovedErrorCount").textContent = removedErrorCount; // Removed hata sayısını burada kullanıyoruz
-
-            // Genel durum sayılarını güncelle
-            updateSummaryNumbers();
-        });
-
-        // EPMDocument güncellemelerini dinliyoruz
-        connection.on("ReceiveEPMDocumentUpdates", (releasedNotSentCount, releasedSentCount, cancelledNotSentCount, cancelledSentCount, releasedErrorCount, cancelledErrorCount) => {
-            document.getElementById("epmReleasedNotSentCount").textContent = releasedNotSentCount;
-            document.getElementById("epmReleasedSentCount").textContent = releasedSentCount;
-            document.getElementById("epmCancelledNotSentCount").textContent = cancelledNotSentCount;
-            document.getElementById("epmCancelledSentCount").textContent = cancelledSentCount;
-            document.getElementById("epmReleasedErrorCount").textContent = releasedErrorCount ?? "-";
-            document.getElementById("epmCancelledErrorCount").textContent = cancelledErrorCount ?? "-";
-
-            // Genel durum sayılarını güncelle
-            updateSummaryNumbers();
-        });
-
-        // EquivalenceLink güncellemelerini dinliyoruz
-        connection.on("ReceiveEquivalenceLinkUpdates", (notSentCount, sentCount, totalCount, removedNotSentCount, removedSentCount, removedTotalCount) => {
-            document.getElementById("equivalenceLinkNotSentCount").textContent = notSentCount;
-            document.getElementById("equivalenceLinkSentCount").textContent = sentCount;
-            document.getElementById("equivalenceLinkTotalCount").textContent = totalCount;
-            document.getElementById("equivalenceLinkRemovedNotSentCount").textContent = removedNotSentCount;
-            document.getElementById("equivalenceLinkRemovedSentCount").textContent = removedSentCount;
-            document.getElementById("equivalenceLinkRemovedTotalCount").textContent = removedTotalCount;
-
-            // Genel durum sayılarını güncelle
-            updateSummaryNumbers();
-        });
-
-        // Otomatik güncelleme: Her 1 saniyede bir /Home/PushIntegrationSummary tetikleniyor.
-        setInterval(() => {
-            fetch('/Home/PushIntegrationSummary', { method: 'POST' })
-                .then(response => response.text())
-                .then(result => console.log("Otomatik güncelleme:", result))
-                .catch(err => console.error(err));
-        }, 5000); // 5 saniyeye çıkarıldı // Sistem performansından dolayı 1 den 5 saniyeye çıkarttım çünkü sql ve apiye istek atıyoruz 1 saniye süre problem yaratabilir duruma göre tekrar 1 e çekilebilir
-       
-        // Genel durum sayılarını güncelleme fonksiyonu
-        function updateSummaryNumbers() {
-            // Toplam entegrasyon sayısı
-            const releasedSent = parseInt(document.getElementById("releasedSentCount").textContent) || 0;
-            const cancelledSent = parseInt(document.getElementById("cancelledSentCount").textContent) || 0;
-            const alternateLinkSent = parseInt(document.getElementById("alternateLinkSentCount").textContent) || 0;
-            const alternateLinkRemovedSent = parseInt(document.getElementById("alternateLinkRemovedSentCount").textContent) || 0;
-            const epmReleasedSent = parseInt(document.getElementById("epmReleasedSentCount").textContent) || 0;
-            const epmCancelledSent = parseInt(document.getElementById("epmCancelledSentCount").textContent) || 0;
-            const equivalenceLinkSent = parseInt(document.getElementById("equivalenceLinkSentCount").textContent) || 0;
-            const equivalenceLinkRemovedSent = parseInt(document.getElementById("equivalenceLinkRemovedSentCount").textContent) || 0;
-
-            const totalIntegration = releasedSent + cancelledSent + alternateLinkSent + alternateLinkRemovedSent +
-                                    epmReleasedSent + epmCancelledSent + equivalenceLinkSent + equivalenceLinkRemovedSent;
-            document.getElementById("totalIntegrationCount").textContent = totalIntegration;
-
-            // Bekleyen işlemler
-            const releasedNotSent = parseInt(document.getElementById("releasedNotSentCount").textContent) || 0;
-            const cancelledNotSent = parseInt(document.getElementById("cancelledNotSentCount").textContent) || 0;
-            const alternateLinkNotSent = parseInt(document.getElementById("alternateLinkNotSentCount").textContent) || 0;
-            const alternateLinkRemovedNotSent = parseInt(document.getElementById("alternateLinkRemovedNotSentCount").textContent) || 0;
-            const epmReleasedNotSent = parseInt(document.getElementById("epmReleasedNotSentCount").textContent) || 0;
-            const epmCancelledNotSent = parseInt(document.getElementById("epmCancelledNotSentCount").textContent) || 0;
-            const equivalenceLinkNotSent = parseInt(document.getElementById("equivalenceLinkNotSentCount").textContent) || 0;
-            const equivalenceLinkRemovedNotSent = parseInt(document.getElementById("equivalenceLinkRemovedNotSentCount").textContent) || 0;
-
-            const pendingOperations = releasedNotSent + cancelledNotSent + alternateLinkNotSent + alternateLinkRemovedNotSent +
-                                     epmReleasedNotSent + epmCancelledNotSent + equivalenceLinkNotSent + equivalenceLinkRemovedNotSent;
-            document.getElementById("pendingOperationsCount").textContent = pendingOperations;
-
-            // Başarılı işlemler
-            document.getElementById("successfulOperationsCount").textContent = totalIntegration;
-        }
-
-        // Sayfa yüklendiğinde özet sayıları güncelle
-        document.addEventListener("DOMContentLoaded", function() {
-            updateSummaryNumbers();
-        });
-    </script>
-} *@
+ *@

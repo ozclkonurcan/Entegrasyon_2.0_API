@@ -2,6 +2,7 @@
 using Domain.Entities;
 using Domain.Entities.Auth;
 using Domain.Entities.EPMModels;
+using Domain.Entities.EPMModels.Equivalence;
 using Domain.Entities.IntegrationSettings;
 using Domain.Entities.LogSettings;
 using Domain.Entities.MailService;
@@ -74,8 +75,23 @@ public class BaseDbContexts : DbContext, INotificationDbContext
 	public DbSet<EPMDocument_CANCELLED_SENT> EPMDocument_CANCELLED_SENT { get; set; }
 	public DbSet<EPMDocument_CANCELLED_ERROR> EPMDocument_CANCELLED_ERROR { get; set; }
 
+
 	public DbSet<EPMDocumentMaster> EPMDocumentMasters { get; set; }
 	public DbSet<EPMReferenceLink> EPMReferenceLinks { get; set; }
+
+
+	//// EPMDocument Equivalence Link
+	//public DbSet<EPMDocument_Equivalence> EPMDocument_Equivalence { get; set; }
+	//public DbSet<EPMDocument_Equivalence_Sent> EPMDocument_Equivalence_Sent { get; set; }
+	//public DbSet<EPMDocument_Equivalence_Error> EPMDocument_Equivalence_Error { get; set; }
+	//public DbSet<EPMDocument_Equivalence_Log> EPMDocument_Equivalence_Log { get; set; } // Log tablosunu unutmayalım
+
+	//// EPMDocument Equivalence Removed
+	//public DbSet<EPMDocument_EquivalenceRemoved> EPMDocument_EquivalenceRemoved { get; set; }
+	//public DbSet<EPMDocument_EquivalenceRemoved_Sent> EPMDocument_EquivalenceRemoved_Sent { get; set; }
+	//public DbSet<EPMDocument_EquivalenceRemoved_Error> EPMDocument_EquivalenceRemoved_Error { get; set; }
+	//// Log tablosu removed için de varsa:
+	//// public DbSet<EPMDocument_EquivalenceRemoved_Log> EPMDocument_EquivalenceRemoved_Log { get; set; }
 
 	#endregion
 

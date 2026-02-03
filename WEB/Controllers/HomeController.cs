@@ -71,6 +71,17 @@ namespace WEB.Controllers
 				var errorDataAlternateRemoved = await _apiService.GetAsync<List<WTPartAlternateLinkRemoved>>("api/WTParts/errordatasalternateremoved");// bunda bi bozuklu oldu bakacaz
 				var pendingAlternateData = await _apiService.GetAsync<List<WTPartAlternateLink>>("api/WTParts/getlistallalternatelink");
 				var pendingAlternateRemovedData = await _apiService.GetAsync<List<WTPartAlternateLinkRemoved>>("api/WTParts/getlistallalternatelinkRemoved");
+
+				// --- YENİ EPM ÇAĞRILARI (API Endpointleri hazır olunca burası çalışacak) ---
+				// Şu anlık null check ile geçiyoruz ki hata vermesin
+				var epmReleasedPending = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/released/pending");
+				var epmReleasedSent = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/released/sent");
+				var epmReleasedError = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/released/error");
+
+				var epmCancelledPending = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/cancelled/pending");
+				var epmCancelledSent = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/cancelled/sent");
+				var epmCancelledError = await _apiService.GetAsync<List<dynamic>>("api/EPMDocuments/cancelled/error");
+
 				// pendingData için boş liste kullan
 				//var pendingData = new List<WTPartViewModel>();
 
@@ -87,6 +98,9 @@ namespace WEB.Controllers
 				var alternateError = errorDataAlternate ?? new List<WTPartAlternateLink>();
 				var alternateRemovedSent = sentDataAlternateRemoved ?? new List<WTPartAlternateLinkRemoved>();
 				var alternateRemovedError = errorDataAlternateRemoved ?? new List<WTPartAlternateLinkRemoved>(); // bilerek null yaptım api de orada bir sıkıntı var sanırım sonra bakacam
+
+
+
 				//var releasedPending = new List<WTPartViewModel>(); // Boş liste
 				//var cancelledPending = new List<WTPartViewModel>(); // Boş liste
 
@@ -104,6 +118,19 @@ namespace WEB.Controllers
 					WtpartAlternateRemovedCount = alternateRemovedPending?.Count ?? 0,
 					WtpartAlternateRemovedSentCount = alternateRemovedSent?.Count ?? 0,
 					WtpartAlternateRemovedErrorCount = alternateRemovedError?.Count ?? 0,
+					// EPMDocument (API'den gelen dinamik listelerin sayısını alıyoruz)
+					EpmReleasedNotSentCount = epmReleasedPending?.Count ?? 0,
+					EpmReleasedSentCount = epmReleasedSent?.Count ?? 0,
+					EpmReleasedErrorCount = epmReleasedError?.Count ?? 0,
+
+					EpmCancelledNotSentCount = epmCancelledPending?.Count ?? 0,
+					EpmCancelledSentCount = epmCancelledSent?.Count ?? 0,
+					EpmCancelledErrorCount = epmCancelledError?.Count ?? 0,
+
+					// Equivalence (Şimdilik 0)
+					EquivalenceLinkNotSentCount = 0,
+					EquivalenceLinkSentCount = 0,
+					EquivalenceLinkErrorCount = 0
 				};
 			}
 			catch (Exception ex)
@@ -156,6 +183,17 @@ namespace WEB.Controllers
 				viewModel.WtpartAlternateRemovedSentCount,
 				viewModel.WtpartAlternateErrorCount,
 				viewModel.WtpartAlternateRemovedErrorCount); // removedTotalCount - şu an için 0 kullanıyoruz
+
+
+			// 3. EPM Document (YENİ)
+			await _hubContext.Clients.All.SendAsync("ReceiveEPMDocumentUpdates",
+				viewModel.EpmReleasedNotSentCount, viewModel.EpmReleasedSentCount,
+				viewModel.EpmCancelledNotSentCount, viewModel.EpmCancelledSentCount,
+				viewModel.EpmReleasedErrorCount, viewModel.EpmCancelledErrorCount);
+
+			// 4. Equivalence (YENİ - Placeholder)
+			await _hubContext.Clients.All.SendAsync("ReceiveEquivalenceLinkUpdates",
+				0, 0, 0, 0, 0, 0);
 
 			return Ok("Güncelleme bildirimi gönderildi.");
 		}
